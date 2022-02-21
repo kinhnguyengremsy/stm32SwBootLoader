@@ -1,6 +1,9 @@
-hostUartBootLoader.c:56:6:hostUartBootLoaderConfiguration	8	static
-hostUartBootLoader.c:85:13:hostBootLoader_readData	16	static
-hostUartBootLoader.c:103:13:hostBootLoader_sendCmdConnect	16	static
-hostUartBootLoader.c:113:13:hostBootLoaderCmdConnect	16	static
-hostUartBootLoader.c:159:13:hostBootLoader_sendCmdGet	24	static
-hostUartBootLoader.c:217:6:hostUartBootLoaderProcess	8	static
+hostUartBootLoader.c:55:6:hostUartBootLoaderConfiguration	8	static
+hostUartBootLoader.c:85:13:hostBootLoader_sendCmdConnect	16	static
+hostUartBootLoader.c:95:13:hostBootLoaderCmdConnect	16	static
+hostUartBootLoader.c:141:13:hostBootLoader_sendCmdGet	40	static
+hostUartBootLoader.c:204:13:hostBootLoader_sendCmdGetVer	32	static
+hostUartBootLoader.c:254:13:hostBootLoader_sendCmdGetId	32	static
+hostUartBootLoader.c:306:13:hostBootLoader_sendCmdErase	16	static
+hostUartBootLoader.c:343:35:hostBootLoader_sendCmdWriteMem	192	static
+hostUartBootLoader.c:518:6:hostUartBootLoaderProcess	8	static

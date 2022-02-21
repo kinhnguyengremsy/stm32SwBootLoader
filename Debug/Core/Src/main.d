@@ -25,10 +25,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- C:/Users/Gremsy-KinhNguyen/STM32CubeIDE/workspace_1.8.0/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h \
- C:/Users/Gremsy-KinhNguyen/STM32CubeIDE/workspace_1.8.0/stm32SwBootLoader/myLibrary/Inc/sotfEmulations.h \
- C:/Users/Gremsy-KinhNguyen/STM32CubeIDE/workspace_1.8.0/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h \
- C:/Users/Gremsy-KinhNguyen/STM32CubeIDE/workspace_1.8.0/stm32SwBootLoader/myLibrary/Inc/uartBootLoader.h
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h \
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/sotfEmulations.h \
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h \
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/uartBootLoader.h
 
 ../Core/Inc/main.h:
 
@@ -84,10 +84,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 
-C:/Users/Gremsy-KinhNguyen/STM32CubeIDE/workspace_1.8.0/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h:
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h:
 
-C:/Users/Gremsy-KinhNguyen/STM32CubeIDE/workspace_1.8.0/stm32SwBootLoader/myLibrary/Inc/sotfEmulations.h:
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/sotfEmulations.h:
 
-C:/Users/Gremsy-KinhNguyen/STM32CubeIDE/workspace_1.8.0/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h:
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h:
 
-C:/Users/Gremsy-KinhNguyen/STM32CubeIDE/workspace_1.8.0/stm32SwBootLoader/myLibrary/Inc/uartBootLoader.h:
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/uartBootLoader.h:

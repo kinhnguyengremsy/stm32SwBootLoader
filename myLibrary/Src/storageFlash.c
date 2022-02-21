@@ -222,6 +222,8 @@ uint32_t storageFlash_EraseSector(uint32_t startSectorAddress, uint32_t offsets)
 	EraseInitStruct.Sector        = StartSector;
 	EraseInitStruct.NbSectors     = (EndSector - StartSector) + 1;
 
+	printf("\n[storageFlash_EraseSector] StartSector : 0x%x - EndSector 0x%x\n", (int)startSectorAddress, (int)EndSectorAddress);
+
 	/* Note: If an erase operation in Flash memory also concerns data in the data or instruction cache,
 	 you have to make sure that these data are rewritten before they are accessed during code
 	 execution. If this cannot be done safely, it is recommended to flush the caches by setting the

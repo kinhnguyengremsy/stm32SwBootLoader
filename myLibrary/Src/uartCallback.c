@@ -23,15 +23,22 @@
 /* Includes------------------------------------------------------------------------------*/
 #include "uartCallback.h"
 #include "serialPort.h"
+#include "ringBuffer.h"
+#include "hostUartBootLoader.h"
 /* Private typedef------------------------------------------------------------------------------*/
 /* Private define------------------------------------------------------------------------------*/
 /* Private macro------------------------------------------------------------------------------*/
 /* Private variables------------------------------------------------------------------------------*/
 extern serialPort_t serial_port2;
 extern serialPort_t serial_port4;
+extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart2;
 
-uartCallback_t callback;
-uartCallback_t callback4;
+extern ringBuffer_t 		rBufferRxU4;
+extern ringBuffer_t 		rBufferRxU2;
+extern uint8_t wData;
+extern uint8_t usart2WData;
+
 /* Private function prototypes------------------------------------------------------------------------------*/
 /* Private functions------------------------------------------------------------------------------*/
 
@@ -44,15 +51,24 @@ uartCallback_t callback4;
 */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if(serial_port2.zPrivate.uartHandle.Instance == USART2)
-    {
-        serialPort_tx_finish(&serial_port2);
-    }
 
-    if(serial_port4.zPrivate.uartHandle.Instance == UART4)
-    {
-        serialPort_tx_finish(&serial_port4);
-    }
+//    if(serial_port2.zPrivate.uartHandle.Instance == USART2)
+//    {
+//        serialPort_tx_finish(&serial_port2);
+//    }
+//
+//    if(serial_port4.zPrivate.uartHandle.Instance == UART4)
+//    {
+//        serialPort_tx_finish(&serial_port4);
+//    }
+	if(huart->Instance == USART2)
+	{
+		serialPort_tx_finish(&serial_port2);
+	}
+	else if(huart->Instance == UART4)
+	{
+		serialPort_tx_finish(&serial_port4);
+	}
 }
 
 #endif
@@ -69,14 +85,13 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	if(serial_port2.zPrivate.uartHandle.Instance == USART2)
+	if(huart->Instance == huart2.Instance)
 	{
-		callback.rxComplete = true;
+		ringBufferWrite(&rBufferRxU2, usart2WData);
 	}
-
-	if(serial_port4.zPrivate.uartHandle.Instance == UART4)
+	else if(huart->Instance == huart4.Instance)
 	{
-		callback4.rxComplete = true;
+		ringBufferWrite(&rBufferRxU4, wData);
 	}
 }
 

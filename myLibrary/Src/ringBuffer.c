@@ -81,6 +81,7 @@ ringBufferState_t ringBufferRead(ringBuffer_t *rBuff, uint8_t *rData)
 	}
 
 	*rData = rBuff->buffer[rBuff->head];
+
 	rBuff->head = (rBuff->head + 1) % RING_BUFFER_LEN;
 	rBuff->len--;
 

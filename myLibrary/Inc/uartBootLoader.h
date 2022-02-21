@@ -28,6 +28,8 @@
 #include "main.h"
 /* Exported define ------------------------------------------------------------*/
 
+#define BOOTLOADER_VERSION		0x01
+
 #define UART_BOOTLOADER_ACK     0x79
 #define UART_BOOTLOADER_NACK    0x1F
 
@@ -43,6 +45,14 @@
 #define UART_BOOTLOADER_CMD_WRITE_UNPROTECT      0x73
 #define UART_BOOTLOADER_CMD_READ_PROTECT         0x82
 #define UART_BOOTLOADER_CMD_READ_UNPROTECT       0x92
+#define UART_BOOTLOADER_CMD_GET_CHECKSUM	     0xA1
+
+#define BOOTLOADER_CMD_LEN			 			 2
+#define BOOTLOADER_CMD_GET_LEN					 15
+#define BOOTLOADER_CMD_GET_VER_LEN				 5
+#define BOOTLOADER_CMD_GET_ID_LEN 				 5
+#define BOOTLOADER_CMD_ERASE_LEN 				 1
+
 /* Exported types ------------------------------------------------------------*/
 
 typedef enum _bootLoaderState_t
@@ -56,11 +66,40 @@ typedef enum _bootLoaderState_t
 
 }bootLoaderState_t;
 
+typedef enum _bootLoaderGetState_t
+{
+	BOOTLOADER_GET_STATE_IDLE,
+	BOOTLOADER_GET_STATE_CMD_GET,
+	BOOTLOADER_GET_STATE_CMD_GET_VER,
+	BOOTLOADER_GET_STATE_CMD_GET_ID,
+	BOOTLOADER_GET_STATE_DONE,
+	BOOTLOADER_GET_STATE_ERROR,
+
+}bootLoaderGetState_t;
+
+typedef enum bootLoaderCmdWriteResult_t
+{
+	BOOTLOADER_CMD_WRITE_RESULT_IDLE,
+	BOOTLOADER_CMD_WRITE_RESULT_ERROR,
+	BOOTLOADER_CMD_WRITE_RESULT_OK,
+}bootLoaderCmdWriteResult_t;
+
 typedef struct _bootLoaderGetCmd_t
 {
 	uint8_t numberOfbyte;
 	uint8_t version;
-	uint8_t support;
+	uint8_t getCmd;
+	uint8_t getVerAndRPStatus;
+	uint8_t getId;
+	uint8_t readMemoryCmd;
+	uint8_t goCmd;
+	uint8_t writeMemoryCmd;
+	uint8_t EraseCmd;
+	uint8_t writeProtectCmd;
+	uint8_t writeUnProtectCmd;
+	uint8_t readOutProtectCmd;
+	uint8_t readOutUnProtectCmd;
+	uint8_t getChecksumCmd;
 
 }bootLoaderGetCmd_t;
 
@@ -70,19 +109,15 @@ typedef struct _bootLoaderGetVersionAndReadProtectionCmd_t
 	uint8_t optionByte1;
 	uint8_t optionByte2;
 
-}bootLoaderGetVersionAndReadProtectionCmd_t;
+}bootLoaderGetVerCmd_t;
 
 typedef struct _bootLoaderGetIdCmd_t
 {
 	uint8_t numberOfbyte;
+	uint8_t byte3;
+	uint8_t byte4;
 
-	union _id
-	{
-		uint8_t byte1;
-		uint8_t Pid;
-	}id;
-
-	uint8_t byte2;
+	uint16_t PID;
 
 }bootLoaderGetIdCmd_t;
 
@@ -96,8 +131,10 @@ typedef struct _uartBootLoader_t
 	bootLoaderState_t state;
 
 	bootLoaderGetCmd_t getCmd;
-	bootLoaderGetVersionAndReadProtectionCmd_t versionAndReadProtection;
+	bootLoaderGetVerCmd_t getVer;
 	bootLoaderGetIdCmd_t getId;
+
+	uint32_t flashAddress;
 
 }uartBootLoader_t;
 /* Exported constants --------------------------------------------------------*/
@@ -110,6 +147,14 @@ typedef struct _uartBootLoader_t
     @return none
 */
 void uartBootLoaderConfiguration(void);
+
+/** @brief	uartBootLoaderChecksumCalculator
+ *  @param[in] beginChecksum : so checksum ban dau
+ *  @param[in] buffer : mang can tinh checksum
+ *  @param[in] len : do dai cua mang tinh checksum
+    @return	none
+*/
+uint8_t uartBootLoaderChecksumCalculator(uint8_t beginChecksum, uint8_t *buffer, uint16_t len);
 
 /** @brief  uartBootLoaderProcess
     @return none
