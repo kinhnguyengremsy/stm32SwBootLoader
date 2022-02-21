@@ -445,7 +445,7 @@ static bootLoaderCmdWriteResult_t hostBootLoader_sendCmdWriteMem(void)
 			payloadBuffer[0] = 127;
 
 			/// create dummy data
-			for(uint16_t i = 1; i < 127; i++)
+			for(uint16_t i = 1; i < 129; i++)
 			{
 				payloadBuffer[i] = i;
 			}
@@ -454,7 +454,7 @@ static bootLoaderCmdWriteResult_t hostBootLoader_sendCmdWriteMem(void)
 
 			printf("\n[hostBootLoader_sendCmdWriteMem] checksum = 0x%x\n", (int)checksum);
 
-			payloadBuffer[127] = checksum;
+			payloadBuffer[128] = checksum;
 
 //			serialPort_write(&serial_port4, payloadBuffer, 100);
 //			serialPort_write(&serial_port4, payloadBuffer + 100, 100);

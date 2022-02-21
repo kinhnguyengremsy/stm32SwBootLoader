@@ -11,4 +11,4 @@ uartBootLoader.c:341:13:uartBootLoaderRecieverCmdErase	24	static
 uartBootLoader.c:385:13:uartBootLoaderRecieverCmdWriteMem1	16	static
 uartBootLoader.c:421:35:uartBootLoaderRecieverCmdWriteMem2	32	static
 uartBootLoader.c:485:35:uartBootLoaderRecieverCmdWriteMem3	24	static
-uartBootLoader.c:592:6:uartBootLoaderProcess	16	static
+uartBootLoader.c:594:6:uartBootLoaderProcess	16	static

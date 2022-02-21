@@ -490,7 +490,7 @@ static bootLoaderCmdWriteResult_t uartBootLoaderRecieverCmdWriteMem3(uartBootLoa
 	static uint8_t state = 0;
 	static uint8_t payload[256];
 
-	memset(payload, 0, 256);
+
 
 	if(result == BOOTLOADER_CMD_WRITE_RESULT_OK)
 	{
@@ -514,16 +514,18 @@ static bootLoaderCmdWriteResult_t uartBootLoaderRecieverCmdWriteMem3(uartBootLoa
 			case 1:
 			{
 				/// cho nhan data byte
-				if(rBufferRxU2.len == numberOfBytes + 1)
+				if(rBufferRxU2.len == numberOfBytes)
 				{
-					for(uint16_t i = 1; i < numberOfBytes; i++)
+					memset(payload, 0, 256);
+
+					for(uint16_t i = 1; i < numberOfBytes + 1; i++)
 					{
 						if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 						{
 							///copy data to buffer
 							payload[i] = rData;
 
-							printf("\n[uartBootLoaderRecieverCmdWriteMem3] byte %d = 0x%x\n", (int)i, (int)rData);
+//							printf("\n[uartBootLoaderRecieverCmdWriteMem3] byte %d = 0x%x\n", (int)i, (int)rData);
 						}
 					}
 
