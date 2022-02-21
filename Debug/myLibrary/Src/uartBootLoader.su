@@ -1,0 +1,10 @@
+uartBootLoader.c:50:6:uartBootLoaderConfiguration	8	static
+uartBootLoader.c:77:13:uartBootLoaderSendAck	16	static
+uartBootLoader.c:87:13:uartBootLoaderSendNack	16	static
+uartBootLoader.c:97:13:uartBootLoaderSendMoreByte	16	static
+uartBootLoader.c:115:13:uartBootLoader_readData	16	static
+uartBootLoader.c:133:13:uartBootLoaderRecieverCmdConnect	24	static
+uartBootLoader.c:170:13:uartBootLoaderRecieverCmdGet	32	static
+uartBootLoader.c:212:52:uartBootLoaderRecieverCmdVersionAndReadProtection	24	static
+uartBootLoader.c:226:30:uartBootLoaderRecieverCmdGetId	24	static
+uartBootLoader.c:249:6:uartBootLoaderProcess	8	static

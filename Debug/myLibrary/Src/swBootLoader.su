@@ -1,0 +1,7 @@
+swBootLoader.c:47:6:swBootLoaderConfiguration	8	static
+swBootLoader.c:66:13:swBootLoader_jumToApplication	24	static,ignoring_inline_asm
+swBootLoader.c:102:23:swBootLoader_wattingStartTranferFile	8	static
+swBootLoader.c:125:23:swBootLoader_stateRecieverData	16	static
+swBootLoader.c:218:16:swBootLoader_writeToFlash	4	static
+swBootLoader.c:232:23:swBootLoader_runReciever	16	static
+swBootLoader.c:355:6:swBootLoader_process	8	static

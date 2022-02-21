@@ -1,0 +1,6 @@
+hostUartBootLoader.c:56:6:hostUartBootLoaderConfiguration	8	static
+hostUartBootLoader.c:85:13:hostBootLoader_readData	16	static
+hostUartBootLoader.c:103:13:hostBootLoader_sendCmdConnect	16	static
+hostUartBootLoader.c:113:13:hostBootLoaderCmdConnect	16	static
+hostUartBootLoader.c:159:13:hostBootLoader_sendCmdGet	24	static
+hostUartBootLoader.c:217:6:hostUartBootLoaderProcess	8	static
