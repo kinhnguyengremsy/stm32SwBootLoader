@@ -29,23 +29,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  12 .ARM.attributes 00000030  00000000  00000000  00020230  2**0
                   CONTENTS, READONLY
- 13 .debug_info   00015a16  00000000  00000000  00020260  2**0
+ 13 .debug_info   00015a29  00000000  00000000  00020260  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_abbrev 00003201  00000000  00000000  00035c76  2**0
+ 14 .debug_abbrev 0000321b  00000000  00000000  00035c89  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_aranges 00000c80  00000000  00000000  00038e78  2**3
+ 15 .debug_aranges 00000c88  00000000  00000000  00038ea8  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_ranges 00000bc8  00000000  00000000  00039af8  2**3
+ 16 .debug_ranges 00000bd0  00000000  00000000  00039b30  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  00021a5b  00000000  00000000  0003a6c0  2**0
+ 17 .debug_macro  00021a5b  00000000  00000000  0003a700  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   00010eb6  00000000  00000000  0005c11b  2**0
+ 18 .debug_line   00010ed4  00000000  00000000  0005c15b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000c7477  00000000  00000000  0006cfd1  2**0
+ 19 .debug_str    000c748e  00000000  00000000  0006d02f  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000053  00000000  00000000  00134448  2**0
+ 20 .comment      00000053  00000000  00000000  001344bd  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  000047c4  00000000  00000000  0013449c  2**2
+ 21 .debug_frame  000047e0  00000000  00000000  00134510  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -12430,9 +12430,9 @@ void uartBootLoaderConfiguration(void)
  8004f30:	4b20      	ldr	r3, [pc, #128]	; (8004fb4 <uartBootLoaderConfiguration+0x88>)
  8004f32:	4a21      	ldr	r2, [pc, #132]	; (8004fb8 <uartBootLoaderConfiguration+0x8c>)
  8004f34:	601a      	str	r2, [r3, #0]
-	huart2.Init.BaudRate 			= 9600;
+	huart2.Init.BaudRate 			= 115200;
  8004f36:	4b1f      	ldr	r3, [pc, #124]	; (8004fb4 <uartBootLoaderConfiguration+0x88>)
- 8004f38:	f44f 5216 	mov.w	r2, #9600	; 0x2580
+ 8004f38:	f44f 32e1 	mov.w	r2, #115200	; 0x1c200
  8004f3c:	605a      	str	r2, [r3, #4]
 	huart2.Init.WordLength 			= UART_WORDLENGTH_9B;
  8004f3e:	4b1d      	ldr	r3, [pc, #116]	; (8004fb4 <uartBootLoaderConfiguration+0x88>)

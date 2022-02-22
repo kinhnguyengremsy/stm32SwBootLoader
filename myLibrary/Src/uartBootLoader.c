@@ -92,7 +92,7 @@ uint8_t findCmd = BOOTLOADER_CMD_NONE;
 void uartBootLoaderConfiguration(void)
 {
 	huart2.Instance 				= USART2;
-	huart2.Init.BaudRate 			= 9600;
+	huart2.Init.BaudRate 			= 115200;
 	huart2.Init.WordLength 			= UART_WORDLENGTH_9B;
 	huart2.Init.StopBits 			= UART_STOPBITS_1;
 	huart2.Init.Parity 				= UART_PARITY_EVEN;
@@ -1105,6 +1105,17 @@ void uartBootLoaderProcess(void)
 		{
 
 		}break;
+	}
+}
+
+/** @brief  uartBootLoaderProcess2
+    @return none
+*/
+void uartBootLoaderProcess2(void)
+{
+	if(uartBootLoaderReadCmd() == BOOTLOADER_CMD_GET_ID)
+	{
+		uartBootLoaderResponseCmdGetId();
 	}
 }
 

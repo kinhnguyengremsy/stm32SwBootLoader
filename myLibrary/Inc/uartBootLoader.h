@@ -183,6 +183,11 @@ uint8_t uartBootLoaderChecksumCalculator(uint8_t beginChecksum, uint8_t *buffer,
 */
 void uartBootLoaderProcess(void);
 
+/** @brief  uartBootLoaderProcess2
+    @return none
+*/
+void uartBootLoaderProcess2(void);
+
 #endif /* __UART_BOOTLOADER_H */
 
 /************************ (C) COPYRIGHT GREMSY *****END OF FILE****************/

@@ -20,3 +20,4 @@ uartBootLoader.c:898:13:uartBootLoaderResponseCmdReadOP	8	static
 uartBootLoader.c:910:13:uartBootLoaderResponseCmdReadOUP	8	static
 uartBootLoader.c:922:13:uartBootLoaderStateConnected	16	static
 uartBootLoader.c:1013:6:uartBootLoaderProcess	16	static
+uartBootLoader.c:1114:6:uartBootLoaderProcess2	8	static
