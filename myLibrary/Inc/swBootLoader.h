@@ -27,7 +27,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 /* Exported define ------------------------------------------------------------*/
-#define ADDRESS_START_APPLICATION ADDR_FLASH_SECTOR_5
+
 /* Exported types ------------------------------------------------------------*/
 typedef enum
 {

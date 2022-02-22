@@ -28,6 +28,8 @@
 #include "main.h"
 /* Exported define ------------------------------------------------------------*/
 
+#define STM32_MAX_FRAME  256	/* cmd read memory */
+
 #define BOOTLOADER_VERSION		0x31
 
 #define UART_BOOTLOADER_ACK     0x79
@@ -182,11 +184,6 @@ uint8_t uartBootLoaderChecksumCalculator(uint8_t beginChecksum, uint8_t *buffer,
     @return none
 */
 void uartBootLoaderProcess(void);
-
-/** @brief  uartBootLoaderProcess2
-    @return none
-*/
-void uartBootLoaderProcess2(void);
 
 #endif /* __UART_BOOTLOADER_H */
 

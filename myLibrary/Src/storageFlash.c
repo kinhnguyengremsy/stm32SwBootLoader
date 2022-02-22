@@ -163,14 +163,14 @@ static uint32_t storageFlash_GetSector(uint32_t Address)
 /** @brief  storageFlash_readData
     @return uint32_t
 */
-void storageFlash_readData(uint32_t address, uint32_t *buffer, uint16_t numberOfWords)
+void storageFlash_readData(uint32_t address, uint8_t *buffer, uint16_t numberOfWords)
 {
 	do
 	{
-		printf("\n[storageFlash_readData] read from address 0x%x\n", (int)address);
+//		printf("\n[storageFlash_readData] read from address 0x%x\n", (int)address);
 
-		*buffer = *(uint32_t *)address;
-		address += 4;
+		*buffer = *(uint8_t *)address;
+		address ++;//= 4;
 		buffer ++;
 	}
 	while((numberOfWords--) != 0);

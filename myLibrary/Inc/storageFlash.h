@@ -61,7 +61,7 @@ int storageFlash_getStringLen(char *str);
 /** @brief  storageFlash_readData
     @return uint32_t
 */
-void storageFlash_readData(uint32_t address, uint32_t *buffer, uint16_t numberOfWords);
+void storageFlash_readData(uint32_t address, uint8_t *buffer, uint16_t numberOfWords);
 
 /** @brief  storageFlash_confirmData
     @return uint32_t

@@ -33,6 +33,7 @@ extern serialPort_t 		serial_port2;
 extern UART_HandleTypeDef 	huart2;
 extern ringBuffer_t 		rBufferRxU2;
 extern uint8_t 				usart2WData;
+bool txComplete;
 
 #if (USE_HOST_BOOTLOADER == 1)
 extern serialPort_t 		serial_port4;
@@ -63,9 +64,10 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 //    {
 //        serialPort_tx_finish(&serial_port4);
 //    }
-	if(huart->Instance == USART2)
+	if(huart->Instance == huart2.Instance)
 	{
-		serialPort_tx_finish(&serial_port2);
+//		serialPort_tx_finish(&serial_port2);
+		txComplete = true;
 	}
 #if (USE_HOST_BOOTLOADER == 1)
 	else if(huart->Instance == UART4)
