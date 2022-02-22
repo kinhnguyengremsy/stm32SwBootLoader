@@ -28,7 +28,7 @@
 #include "main.h"
 /* Exported define ------------------------------------------------------------*/
 
-#define BOOTLOADER_VERSION		0x01
+#define BOOTLOADER_VERSION		0x31
 
 #define UART_BOOTLOADER_ACK     0x79
 #define UART_BOOTLOADER_NACK    0x1F
@@ -40,7 +40,7 @@
 #define UART_BOOTLOADER_CMD_READ_MEMORY          0x11
 #define UART_BOOTLOADER_CMD_GO                   0x21
 #define UART_BOOTLOADER_CMD_WRITE_MEMORY         0x31
-#define UART_BOOTLOADER_CMD_ERASE                0x44
+#define UART_BOOTLOADER_CMD_ERASE                0x43
 #define UART_BOOTLOADER_CMD_WRITE_PROTECT        0x63
 #define UART_BOOTLOADER_CMD_WRITE_UNPROTECT      0x73
 #define UART_BOOTLOADER_CMD_READ_PROTECT         0x82
@@ -48,7 +48,7 @@
 #define UART_BOOTLOADER_CMD_GET_CHECKSUM	     0xA1
 
 #define BOOTLOADER_CMD_LEN			 			 2
-#define BOOTLOADER_CMD_GET_LEN					 15
+#define BOOTLOADER_CMD_GET_LEN					 16
 #define BOOTLOADER_CMD_GET_VER_LEN				 5
 #define BOOTLOADER_CMD_GET_ID_LEN 				 5
 #define BOOTLOADER_CMD_ERASE_LEN 				 1
@@ -69,9 +69,10 @@ typedef enum _bootLoaderState_t
 typedef enum _bootLoaderGetState_t
 {
 	BOOTLOADER_GET_STATE_IDLE,
-	BOOTLOADER_GET_STATE_CMD_GET,
-	BOOTLOADER_GET_STATE_CMD_GET_VER,
 	BOOTLOADER_GET_STATE_CMD_GET_ID,
+	BOOTLOADER_GET_STATE_CMD_GET,
+	BOOTLOADER_GET_STATE_CMD_GET_ID2,
+	BOOTLOADER_GET_STATE_CMD_GET_VER,
 	BOOTLOADER_GET_STATE_DONE,
 	BOOTLOADER_GET_STATE_ERROR,
 
@@ -83,6 +84,25 @@ typedef enum bootLoaderCmdWriteResult_t
 	BOOTLOADER_CMD_WRITE_RESULT_ERROR,
 	BOOTLOADER_CMD_WRITE_RESULT_OK,
 }bootLoaderCmdWriteResult_t;
+
+typedef enum
+{
+	BOOTLOADER_CMD_NONE = 0x00,
+	BOOTLOADER_CMD_GET,
+	BOOTLOADER_CMD_GET_VER,
+	BOOTLOADER_CMD_GET_ID,
+	BOOTLOADER_CMD_READ_MEMORY,
+	BOOTLOADER_CMD_GO,
+	BOOTLOADER_CMD_WRITE_MEMORY,
+	BOOTLOADER_CMD_ERASE,
+	BOOTLOADER_CMD_WRITE_PROTECT,
+	BOOTLOADER_CMD_WRITE_UNPROTECT,
+	BOOTLOADER_CMD_READ_PROTECT,
+	BOOTLOADER_CMD_READ_UNPROTECT,
+	BOOTLOADER_CMD_GET_CHECKSUM,
+	BOOTLOADER_CMD_GET_TOTAL,
+
+}bootLoaderCmd_t;
 
 typedef struct _bootLoaderGetCmd_t
 {
@@ -129,6 +149,8 @@ typedef struct _uartBootLoader_t
 	uint8_t rxData;
 
 	bootLoaderState_t state;
+
+	bootLoaderCmd_t rCmd;
 
 	bootLoaderGetCmd_t getCmd;
 	bootLoaderGetVerCmd_t getVer;

@@ -29,15 +29,17 @@
 /* Private define------------------------------------------------------------------------------*/
 /* Private macro------------------------------------------------------------------------------*/
 /* Private variables------------------------------------------------------------------------------*/
-extern serialPort_t serial_port2;
-extern serialPort_t serial_port4;
-extern UART_HandleTypeDef huart4;
-extern UART_HandleTypeDef huart2;
-
-extern ringBuffer_t 		rBufferRxU4;
+extern serialPort_t 		serial_port2;
+extern UART_HandleTypeDef 	huart2;
 extern ringBuffer_t 		rBufferRxU2;
-extern uint8_t wData;
-extern uint8_t usart2WData;
+extern uint8_t 				usart2WData;
+
+#if (USE_HOST_BOOTLOADER == 1)
+extern serialPort_t 		serial_port4;
+extern UART_HandleTypeDef 	huart4;
+extern ringBuffer_t 		rBufferRxU4;
+extern uint8_t 				wData;
+#endif
 
 /* Private function prototypes------------------------------------------------------------------------------*/
 /* Private functions------------------------------------------------------------------------------*/
@@ -65,10 +67,12 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		serialPort_tx_finish(&serial_port2);
 	}
+#if (USE_HOST_BOOTLOADER == 1)
 	else if(huart->Instance == UART4)
 	{
 		serialPort_tx_finish(&serial_port4);
 	}
+#endif
 }
 
 #endif
@@ -89,10 +93,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		ringBufferWrite(&rBufferRxU2, usart2WData);
 	}
+#if (USE_HOST_BOOTLOADER == 1)
 	else if(huart->Instance == huart4.Instance)
 	{
 		ringBufferWrite(&rBufferRxU4, wData);
 	}
+#endif
 }
 
 #endif

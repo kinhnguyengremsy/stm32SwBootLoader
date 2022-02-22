@@ -1,5 +1,5 @@
 myLibrary/Src/hostUartBootLoader.o: ../myLibrary/Src/hostUartBootLoader.c \
- E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h \
+ D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h \
  ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -25,12 +25,9 @@ myLibrary/Src/hostUartBootLoader.o: ../myLibrary/Src/hostUartBootLoader.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/uartBootLoader.h \
- E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/serialPort.h \
- E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/ringBuffer.h
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 
-E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h:
+D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h:
 
 ../Core/Inc/main.h:
 
@@ -85,9 +82,3 @@ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoa
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-
-E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/uartBootLoader.h:
-
-E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/serialPort.h:
-
-E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/ringBuffer.h:
