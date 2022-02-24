@@ -4,10 +4,10 @@ storageFlash.c:69:7:Bytes2float	32	static
 storageFlash.c:89:5:storageFlash_getStringLen	24	static
 storageFlash.c:107:17:storageFlash_GetSector	24	static
 storageFlash.c:166:6:storageFlash_readData	24	static
-storageFlash.c:182:6:storageFlash_confirmData	40	static
-storageFlash.c:205:10:storageFlash_EraseSector	32	static
-storageFlash.c:247:10:storageFlash_writeData	32	static
-storageFlash.c:312:10:storageFlash_writeDataNonErase	32	static
-storageFlash.c:342:6:storageFlash_writeNumber	24	static
-storageFlash.c:353:7:storageFlash_readNumber	24	static
-storageFlash.c:367:6:storageFlash_test	40	dynamic
+storageFlash.c:183:6:storageFlash_confirmData	40	static
+storageFlash.c:206:10:storageFlash_EraseSector	32	static
+storageFlash.c:248:10:storageFlash_writeData	32	static
+storageFlash.c:287:10:storageFlash_writeDataNonErase	24	static
+storageFlash.c:297:6:storageFlash_writeNumber	24	static
+storageFlash.c:308:7:storageFlash_readNumber	24	static
+storageFlash.c:322:6:storageFlash_test	40	dynamic

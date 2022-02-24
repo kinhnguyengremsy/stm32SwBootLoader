@@ -167,8 +167,9 @@ void storageFlash_readData(uint32_t address, uint8_t *buffer, uint16_t numberOfW
 {
 	do
 	{
-//		printf("\n[storageFlash_readData] read from address 0x%x\n", (int)address);
-
+#if (USE_CONSOLE_DEBUG == 1)
+		printf("\n[storageFlash_readData] read from address 0x%x\n", (int)address);
+#endif
 		*buffer = *(uint8_t *)address;
 		address ++;//= 4;
 		buffer ++;
@@ -246,36 +247,10 @@ uint32_t storageFlash_EraseSector(uint32_t startSectorAddress, uint32_t offsets)
 //bool storageFlash_writeData(uint32_t startSectorAddress, uint32_t *Data, uint16_t numberOfWords)
 uint32_t storageFlash_writeData(uint32_t startSectorAddress, uint8_t *Data, uint16_t numberOfWords)
 {
-//	static FLASH_EraseInitTypeDef EraseInitStruct;
-//	uint32_t SECTORError;
 	int sofar = 0;
-
 
 	/* Unlock the Flash to enable the flash control register access *************/
 	HAL_FLASH_Unlock();
-
-	/* Erase the user Flash area */
-//	storageFlash_EraseSector(startSectorAddress);
-//	/* Get the number of sector to erase from 1st sector */
-//
-//	uint32_t StartSector = storageFlash_GetSector(startSectorAddress);
-//	uint32_t EndSectorAddress = startSectorAddress + numberOfWords;// * 4;
-//	uint32_t EndSector = storageFlash_GetSector(EndSectorAddress);
-//
-//	/* Fill EraseInit structure*/
-//	EraseInitStruct.TypeErase     = FLASH_TYPEERASE_SECTORS;
-//	EraseInitStruct.VoltageRange  = FLASH_VOLTAGE_RANGE_3;
-//	EraseInitStruct.Sector        = StartSector;
-//	EraseInitStruct.NbSectors     = (EndSector - StartSector) + 1;
-//
-//	/* Note: If an erase operation in Flash memory also concerns data in the data or instruction cache,
-//	 you have to make sure that these data are rewritten before they are accessed during code
-//	 execution. If this cannot be done safely, it is recommended to flush the caches by setting the
-//	 DCRST and ICRST bits in the FLASH_CR register. */
-//	if (HAL_FLASHEx_Erase(&EraseInitStruct, & SECTORError) != HAL_OK)
-//	{
-//		return HAL_FLASH_GetError();
-//	}
 
 	/* Program the user Flash area word by word
 	(area defined by FLASH_USER_START_ADDR and FLASH_USER_END_ADDR) ***********/
@@ -311,27 +286,7 @@ uint32_t storageFlash_writeData(uint32_t startSectorAddress, uint8_t *Data, uint
 */
 uint32_t storageFlash_writeDataNonErase(uint32_t startSectorAddress, uint8_t *Data, uint16_t numberOfWords)
 {
-	int sofar = 0;
-
-	HAL_FLASH_Unlock();
-
-	while (sofar < numberOfWords)
-	{
-		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, startSectorAddress, Data[sofar]) == HAL_OK)
-		{
-			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_14);
-
-			startSectorAddress ++;//= 4;  // use StartPageAddress += 2 for half word and 8 for double word
-			sofar++;
-		}
-		else
-		{
-			/* Error occurred while writing data in Flash memory*/
-			return HAL_FLASH_GetError();
-		}
-	}
-
-	HAL_FLASH_Lock();
+	printf("\nfunction not found .................................\n");
 
 	return 0;
 }

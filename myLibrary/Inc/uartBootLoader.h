@@ -61,8 +61,7 @@ typedef enum _bootLoaderState_t
 {
 	BOOTLOADER_STATE_IDLE = 0x00,
 	BOOTLOADER_STATE_CONNECTED,
-	BOOTLOADER_STATE_ERASE,
-	BOOTLOADER_STATE_WRITE,
+	BOOTLOADER_STATE_RESET_PARAM_BOOTLOADER,
 	BOOTLOADER_STATE_DONE,
 	BOOTLOADER_STATE_ERROR,
 
@@ -101,7 +100,7 @@ typedef enum
 	BOOTLOADER_CMD_WRITE_UNPROTECT,
 	BOOTLOADER_CMD_READ_PROTECT,
 	BOOTLOADER_CMD_READ_UNPROTECT,
-	BOOTLOADER_CMD_GET_CHECKSUM,
+//	BOOTLOADER_CMD_GET_CHECKSUM,
 	BOOTLOADER_CMD_GET_TOTAL,
 
 }bootLoaderCmd_t;
@@ -157,8 +156,6 @@ typedef struct _uartBootLoader_t
 	bootLoaderGetCmd_t getCmd;
 	bootLoaderGetVerCmd_t getVer;
 	bootLoaderGetIdCmd_t getId;
-
-	uint32_t flashAddress;
 
 }uartBootLoader_t;
 /* Exported constants --------------------------------------------------------*/

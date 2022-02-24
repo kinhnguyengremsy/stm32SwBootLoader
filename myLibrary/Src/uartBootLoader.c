@@ -27,12 +27,36 @@
 #include "ringBuffer.h"
 #include "storageFlash.h"
 /* Private typedef----------------------------------------------------------------------------*/
-struct
+
+typedef enum _bootLoaderCmdEraseState_t
+{
+	CMD_ERASE_STATE_RESPONSE_ACK_BEGIN = 0x00,
+	CMD_ERASE_STATE_RECIEVE_NUMBER_OF_PAGES,
+	CMD_ERASE_STATE_PROCESS_MASS_ERASE,
+	CMD_ERASE_STATE_PROCESS_BANK1_ERASE,
+	CMD_ERASE_STATE_PROCESS_BANK2_ERASE,
+	CMD_ERASE_STATE_PROCESS_OTHER_ERASE,
+	CMD_ERASE_STATE_RESPONSE_ACK_SPECIAL_ERASE,
+	CMD_ERASE_STATE_RESERVED,
+	CMD_ERASE_STATE_RESPONSE_ACK_EXTERN_ERASE,
+	CMD_ERASE_STATE_DONE,
+
+}bootLoaderCmdEraseState_t;
+
+typedef enum _bootLoaderCmdWriteMemState_t
+{
+	CMD_WRITE_MEM_STATE_REPONSE_ACK_BEGIN = 0x00,
+	CMD_WRITE_MEM_STATE_RECIEVE_ADDRESS_AND_CHECKSUM,
+	CMD_WRITE_MEM_STATE_WRITE_TO_FLASH,
+	CMD_WRITE_MEM_STATE_DONE,
+
+}bootLoaderCmdWriteMemState_t;
+
+struct _bootLoaderCmdList
 {
 	uint8_t cmdHeader;
 	uint8_t cmdFooter;
 }bootLoaderCmdList[BOOTLOADER_CMD_GET_TOTAL] = {
-//		{.cmdHeader = 0x00, .cmdFooter = 0x00},
 		{.cmdHeader = 0x00, .cmdFooter = 0x00},
 		{.cmdHeader = UART_BOOTLOADER_CMD_GET				, .cmdFooter = UART_BOOTLOADER_CMD_GET 		^ 0xff},
 		{.cmdHeader = UART_BOOTLOADER_CMD_GET_VER			, .cmdFooter = UART_BOOTLOADER_CMD_GET_VER 	^ 0xff},
@@ -45,10 +69,10 @@ struct
 		{.cmdHeader = UART_BOOTLOADER_CMD_WRITE_UNPROTECT	, .cmdFooter = 0x8C},
 		{.cmdHeader = UART_BOOTLOADER_CMD_READ_PROTECT		, .cmdFooter = 0x7D},
 		{.cmdHeader = UART_BOOTLOADER_CMD_READ_UNPROTECT	, .cmdFooter = 0x6D},
-		{.cmdHeader = UART_BOOTLOADER_CMD_GET_CHECKSUM		, .cmdFooter = 0x5E},
+//		{.cmdHeader = UART_BOOTLOADER_CMD_GET_CHECKSUM		, .cmdFooter = 0x5E},
 };
 
-struct
+struct _bootLoaderCmdStr_t
 {
 	char *str;
 }bootLoaderCmdStr_t[13] = {
@@ -110,7 +134,7 @@ static void uartBootLoaderJumToApplication(void)
 
 	uint32_t JumpAddress = *((volatile uint32_t*) (ADDRESS_START_APPLICATION + 4));
 
-	/* Set Program Counter to Blink LED Apptication Address*/
+	/* Set Program Counter to Apptication Address*/
 	void (*reset_handler)(void) = (void*)JumpAddress;
 	reset_handler();
 }
@@ -193,6 +217,8 @@ static void uartBootLoaderSendNack(void)
 }
 
 /** @brief	uartBootLoaderSendMoreByte
+ *  @param[in] buffer mang truyen
+ *  @param[in] len chieu dai mang truyen
     @return	none
 */
 static void uartBootLoaderSendMoreByte(uint8_t *buffer, uint16_t len)
@@ -235,14 +261,14 @@ uint8_t uartBootLoaderChecksumCalculator(uint8_t beginChecksum, uint8_t *buffer,
 #define __UART_BOOTLOADER_READ_FUNCTION
 
 /** @brief  uartBootLoaderRecieverCmdConnect
-    @return 
+    @return bool
 */
-static bool uartBootLoaderRecieverCmdConnect(uartBootLoader_t *boot)
+static bool uartBootLoaderRecieverCmdConnect(void)
 {
 	uint8_t rData = 0;
 	static uint32_t timePrintDebug = 0;
 
-	if(rBufferRxU2.len == 1)
+	if(rBufferRxU2.len >= 1)
 	{
 		if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 		{
@@ -250,6 +276,7 @@ static bool uartBootLoaderRecieverCmdConnect(uartBootLoader_t *boot)
 			{
 				uartBootLoaderSendAck();
 				timePrintDebug = 0;
+
 				printf("\n[uartBootLoaderRecieverCmdConnect] boot connected !@! len = %d\n", rBufferRxU2.len);
 
 				return true;
@@ -262,7 +289,6 @@ static bool uartBootLoaderRecieverCmdConnect(uartBootLoader_t *boot)
 		}
 	}
 
-
 	if(HAL_GetTick() - timePrintDebug > 1000)
 	{
 		timePrintDebug = HAL_GetTick();
@@ -270,6 +296,7 @@ static bool uartBootLoaderRecieverCmdConnect(uartBootLoader_t *boot)
 
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 	}
+
 
 	return false;
 }
@@ -316,6 +343,7 @@ static bootLoaderCmd_t uartBootLoaderReadCmd(void)
 			if(trueCmdCount == BOOTLOADER_CMD_LEN)
 			{
 				printf("\n[uartBootLoaderReadCmd] found %s\n", bootLoaderCmdStr_t[i].str);
+
 				return (bootLoaderCmd_t)i;
 			}
 			else
@@ -329,6 +357,7 @@ static bootLoaderCmd_t uartBootLoaderReadCmd(void)
 		uartBootLoaderSendNack();
 
 		printf("\n[uartBootLoaderReadCmd] send Nack byte ...\n");
+
 	}
 
 	return BOOTLOADER_CMD_NONE;
@@ -446,9 +475,9 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 		case 0:
 		{
 			uartBootLoaderSendAck();
-
+#if(USE_CONSOLE_DEBUG == 1)
 			printf("\n[uartBootLoaderResponseCmdReadMem] send Ack byte 1...\n");
-
+#endif
 			state = 1;
 		}break;
 		case 1:
@@ -458,7 +487,9 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 				for(uint8_t i = 0; i < 5;i++)
 				if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 				{
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdReadMem] reciever byte = 0x%x | len = %d\n", rData, rBufferRxU2.len);
+#endif
 					addressBuffer[i] = rData;
 				}
 
@@ -469,21 +500,25 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 
 				uint8_t checksum = uartBootLoaderChecksumCalculator(0, addressBuffer, 4);
 				uint8_t rChecksum = addressBuffer[4];
+
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdReadMem] address = 0x%x | checksum = 0x%x | rChecksum = 0x%x\n", rAddress, checksum, rChecksum);
+#endif
 
 				if(checksum == rChecksum)
 				{
 					uartBootLoaderSendAck();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdReadMem] send Ack byte 2...\n");
-
+#endif
 					state = 2;
 				}
 				else
 				{
 					uartBootLoaderSendNack();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdReadMem] send nack byte 2...\n");
+#endif
 					state = 10;
 				}
 
@@ -496,7 +531,9 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 				for(uint8_t i = 0 ; i < 2; i++)
 				if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 				{
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdReadMem] reciever byte = 0x%x | len = %d\n", rData, rBufferRxU2.len);
+#endif
 					nBuffer[i] = rData;
 				}
 
@@ -505,21 +542,23 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 				checksum ^= 0xff;
 
 				uint8_t rChecksum = nBuffer[1];
-
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdReadMem] checksum = 0x%x | rChecksum = %d\n", checksum, rChecksum);
-
+#endif
 				if(checksum != rChecksum)
 				{
 					uartBootLoaderSendNack();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdReadMem] send nack byte 3...\n");
+#endif
 					state = 10;
 				}
 				else
 				{
 					uartBootLoaderSendAck();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdReadMem] send Ack byte 2...\n");
+#endif
 				}
 
 				state = 3;
@@ -527,25 +566,25 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 		}break;
 		case 3:
 		{
-			uint8_t buffer[STM32_MAX_FRAME - 1];
+			uint8_t buffer[STM32_MAX_FRAME];
 
 			uint32_t addressOffset = rAddress - oldRaddress;
 			oldRaddress = rAddress;
 			realAddress += addressOffset;
-
+#if(USE_CONSOLE_DEBUG == 1)
 			printf("\n[uartBootLoaderResponseCmdReadMem] addressOffset = 0x%x | realAddress = 0x%x\n", (int)addressOffset, (int)realAddress);
+#endif
+			storageFlash_readData(realAddress, buffer, STM32_MAX_FRAME);
 
-			storageFlash_readData(realAddress, buffer, STM32_MAX_FRAME - 1);
-
-			HAL_UART_Transmit_DMA(&huart2, buffer, STM32_MAX_FRAME - 1);
+			HAL_UART_Transmit_DMA(&huart2, buffer, STM32_MAX_FRAME);
 			while(txComplete == false)
 			{
 
 			}
 			txComplete = false;
-
-			printf("\n[uartBootLoaderResponseCmdReadMem] send %d successful\n", STM32_MAX_FRAME - 1);
-
+#if(USE_CONSOLE_DEBUG == 1)
+			printf("\n[uartBootLoaderResponseCmdReadMem] send %d successful\n", STM32_MAX_FRAME);
+#endif
 			state = 0;
 			rAddress = 0;
 
@@ -585,13 +624,13 @@ static bool uartBootLoaderResponseCmdReadOUP(void)
 */
 static bool uartBootLoaderResponseCmdErase(void)
 {
-	static uint8_t state = 0;
+	static bootLoaderCmdEraseState_t state = CMD_ERASE_STATE_RESPONSE_ACK_BEGIN;
 	uint8_t rData = 0;
-	uint32_t offsets = 0x00010000;
+	uint32_t offsets = 0x00020000;
 
 	switch(state)
 	{
-		case 0:
+		case CMD_ERASE_STATE_RESPONSE_ACK_BEGIN:
 		{
 			static uint32_t timeOutRecPage = 0;
 			static uint8_t wattingCount = 0;
@@ -600,26 +639,30 @@ static bool uartBootLoaderResponseCmdErase(void)
 			{
 				/// response ack to host
 				uartBootLoaderSendAck();
+
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdErase] send Ack byte ...\n");
+#endif
 			}
 
 			if(HAL_GetTick() - timeOutRecPage > 500)
 			{
 				timeOutRecPage = HAL_GetTick();
-
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdErase] waitting more byte of cmd erase ...\n");
-
+#endif
 				if(++wattingCount > 4)
 				{
 					timeOutRecPage = 0;
 					wattingCount = 0;
-					state = 1;
+					state = CMD_ERASE_STATE_RECIEVE_NUMBER_OF_PAGES;
 				}
 			}
 		}break;
-		case 1:
+		case CMD_ERASE_STATE_RECIEVE_NUMBER_OF_PAGES:
 		{
 			/// Receive the page codes (on 2 bytes each, MSB first)
+			/// select special erase or no
 			if(rBufferRxU2.len == 3)
 			{
 				uint8_t bufferSpecialErase[3] = {0, 0, 0};
@@ -629,8 +672,9 @@ static bool uartBootLoaderResponseCmdErase(void)
 					if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 					{
 						bufferSpecialErase[i] = rData;
+#if(USE_CONSOLE_DEBUG == 1)
 						printf("\n[uartBootLoaderResponseCmdErase] reciever byte 0x%x | len = %d\n", bufferSpecialErase[i], rBufferRxU2.len);
-
+#endif
 					}
 				}
 
@@ -638,25 +682,25 @@ static bool uartBootLoaderResponseCmdErase(void)
 				specialErase = bufferSpecialErase[0] | (bufferSpecialErase[1] << 8);
 				uint8_t checksum = uartBootLoaderChecksumCalculator(0, bufferSpecialErase, 2);
 				uint8_t rChecksum = bufferSpecialErase[2];
-
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdErase] specialErase = 0x%x | checksum = 0x%x  | rChecksum = 0x%x \n", specialErase, checksum, rChecksum);
-
+#endif
 				if(checksum == rChecksum)
 				{
 					if(specialErase == 0xffff)
 					{
-						state = 2;
+						state = CMD_ERASE_STATE_PROCESS_MASS_ERASE;
 					}else if(specialErase == 0xfffe)
 					{
-						state = 3;
+						state = CMD_ERASE_STATE_PROCESS_BANK1_ERASE;
 					}
 					else if(specialErase == 0xfffd)
 					{
-						state = 4;
+						state = CMD_ERASE_STATE_PROCESS_BANK2_ERASE;
 					}
 					else
 					{
-						state = 5;
+						state = CMD_ERASE_STATE_PROCESS_OTHER_ERASE;
 					}
 				}
 			}
@@ -674,18 +718,20 @@ static bool uartBootLoaderResponseCmdErase(void)
 				if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 				{
 					EraseNonSpecialBuffer[i] = rData;
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdErase] reciever byte 0x%x | len = %d\n", EraseNonSpecialBuffer[i], rBufferRxU2.len);
+#endif
 				}
 
 				uint16_t NofByte = EraseNonSpecialBuffer[0] << 8 | EraseNonSpecialBuffer[1];
 				uint8_t checksum = uartBootLoaderChecksumCalculator(0, EraseNonSpecialBuffer, numberOfBytesRec - 1);
 				uint8_t rChecksum = EraseNonSpecialBuffer[numberOfBytesRec - 1];
-
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdErase]  N = 0x%x | checksum = 0x%x | rChecksum = 0x%x\n", NofByte, checksum, rChecksum);
-
+#endif
 				if((2 * (NofByte + 1)) != (numberOfBytesRec - 1)) /// check number of bytes of page numbers
 				{
-					state = 7;
+					state = CMD_ERASE_STATE_RESERVED;
 				}
 
 				if(checksum == rChecksum)
@@ -694,40 +740,21 @@ static bool uartBootLoaderResponseCmdErase(void)
 
 					if(NofByte >= numberOfPageCanErase - 1)
 					{
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_4, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_5, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_6, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_7, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_8, offsets);
+						for(uint8_t i = 0; i < numberOfPageCanErase - 1; i++)
+						storageFlash_EraseSector(ADDRESS_START_APPLICATION + i * offsets, offsets);
+
 					}
-					else if (NofByte == 0)
+					else
 					{
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_4, offsets);
-					}
-					else if (NofByte == 1)
-					{
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_4, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_5, offsets);
-					}
-					else if (NofByte == 2)
-					{
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_4, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_5, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_6, offsets);
-					}
-					else if (NofByte == 3)
-					{
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_4, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_5, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_6, offsets);
-						storageFlash_EraseSector(ADDR_FLASH_SECTOR_7, offsets);
+						for(uint8_t i = 0; i < NofByte + 1; i++)
+						storageFlash_EraseSector(ADDRESS_START_APPLICATION + i * offsets, offsets);
 					}
 
-					state = 8;
+					state = CMD_ERASE_STATE_RESPONSE_ACK_EXTERN_ERASE;
 				}
 			}
 		}break;
-		case 2: /// mass erase
+		case CMD_ERASE_STATE_PROCESS_MASS_ERASE: /// mass erase
 		{
 			storageFlash_EraseSector(ADDR_FLASH_SECTOR_5, offsets);
 			storageFlash_EraseSector(ADDR_FLASH_SECTOR_6, offsets);
@@ -735,40 +762,46 @@ static bool uartBootLoaderResponseCmdErase(void)
 			storageFlash_EraseSector(ADDR_FLASH_SECTOR_8, offsets);
 			storageFlash_EraseSector(ADDR_FLASH_SECTOR_9, offsets);
 
-			/// response ack to host
-			uartBootLoaderSendAck();
-			printf("\n[uartBootLoaderResponseCmdErase] send Ack byte ...\n");
-
-			state = 6;
+			state = CMD_ERASE_STATE_RESPONSE_ACK_SPECIAL_ERASE;
 		}break;
-		case 3: /// bank 1 erase
+		case CMD_ERASE_STATE_PROCESS_BANK1_ERASE: /// bank 1 erase
 		{
 
 		}break;
-		case 4: /// bank 2 erase
+		case CMD_ERASE_STATE_PROCESS_BANK2_ERASE: /// bank 2 erase
 		{
 
 		}break;
-		case 5: /// other erase
+		case CMD_ERASE_STATE_PROCESS_OTHER_ERASE: /// other erase
 		{
 
 		}break;
-		case 6:
-		{
-
-		}break;
-		case 7:
-		{
-
-
-		}break;
-		case 8:
+		case CMD_ERASE_STATE_RESPONSE_ACK_SPECIAL_ERASE:
 		{
 			/// response ack to host
 			uartBootLoaderSendAck();
 			printf("\n[uartBootLoaderResponseCmdErase] send Ack byte ...\n");
+			printf("\n[uartBootLoaderResponseCmdErase] response cmd special (mass erase) successful\n");
 
 			state = 0;
+		}break;
+		case CMD_ERASE_STATE_RESERVED:
+		{
+
+
+		}break;
+		case CMD_ERASE_STATE_RESPONSE_ACK_EXTERN_ERASE:
+		{
+			/// response ack to host
+			uartBootLoaderSendAck();
+			printf("\n[uartBootLoaderResponseCmdErase] send Ack byte ...\n");
+			printf("\n[uartBootLoaderResponseCmdErase] response cmd extern erase successful\n");
+
+			state = CMD_ERASE_STATE_DONE;
+		}break;
+		case CMD_ERASE_STATE_DONE:
+		{
+			state = CMD_ERASE_STATE_RESPONSE_ACK_BEGIN;
 
 			return true;
 		}break;
@@ -782,26 +815,27 @@ static bool uartBootLoaderResponseCmdErase(void)
 */
 static bool uartBootLoaderResponseCmdWriteMem(void)
 {
-	static uint8_t state = 0;
+	static bootLoaderCmdWriteMemState_t state = CMD_WRITE_MEM_STATE_REPONSE_ACK_BEGIN;
 	uint8_t rData = 0;
 	uint8_t addressBuffer[5] = {0, 0, 0, 0, 0};
 	static uint32_t rAddress = 0;
 	static bool getStartAddress = false;
 	static uint32_t oldRaddress = 0;
-	static uint32_t realAddress = ADDRESS_START_APPLICATION;
+	static uint32_t realAddress = 0;
 	uint8_t checksum = 0;
 
 	switch(state)
 	{
-		case 0:
+		case CMD_WRITE_MEM_STATE_REPONSE_ACK_BEGIN:
 		{
 			/// response ack to host
 			uartBootLoaderSendAck();
+#if(USE_CONSOLE_DEBUG == 1)
 			printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte...\n");
-
-			state = 1;
+#endif
+			state = CMD_WRITE_MEM_STATE_RECIEVE_ADDRESS_AND_CHECKSUM;
 		}break;
-		case 1:
+		case CMD_WRITE_MEM_STATE_RECIEVE_ADDRESS_AND_CHECKSUM:
 		{
 			/// read address and checksum
 			if(rBufferRxU2.len == 5)
@@ -811,7 +845,9 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 					if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 					{
 						addressBuffer[i] = rData;
+#if(USE_CONSOLE_DEBUG == 1)
 						printf("\n[uartBootLoaderResponseCmdWriteMem] reciever byte = 0x%x | len = %d\n", rData, rBufferRxU2.len);
+#endif
 					}
 				}
 
@@ -825,33 +861,33 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 				{
 					getStartAddress = true;
 					oldRaddress = rAddress;
+
+					realAddress = rAddress;
 				}
 
 				checksum = uartBootLoaderChecksumCalculator(0, addressBuffer, 4);
-
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdWriteMem] reciever address = 0x%x | checksum = %d\n", (int)rAddress, (int)checksum);
-
+#endif
 				if(checksum == addressBuffer[4])
 				{
 					uartBootLoaderSendAck();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte...\n");
-					state = 2;
+#endif
+					state = CMD_WRITE_MEM_STATE_WRITE_TO_FLASH;
 				}
 				else
 				{
 					uartBootLoaderSendNack();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdWriteMem] state 1 send nack byte...\n");
+#endif
 					state = 10;
 				}
 			}
 		}break;
-		case 2:
-		{
-			state = 3;
-		}break;
-		case 3:
+		case CMD_WRITE_MEM_STATE_WRITE_TO_FLASH:
 		{
 			uint8_t data[STM32_MAX_FRAME + 2];
 			uint8_t rChecksum = 0;
@@ -863,7 +899,9 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 					if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 					{
 						data[i] = rData;
-//						printf("\n[uartBootLoaderResponseCmdWriteMem] reciever byte = 0x%x | len = %d\n", data[i], rBufferRxU2.len);
+#if(USE_CONSOLE_DEBUG == 1)
+						printf("\n[uartBootLoaderResponseCmdWriteMem] reciever byte = 0x%x | len = %d\n", data[i], rBufferRxU2.len);
+#endif
 					}
 				}
 				/*data[0] : number of bytes
@@ -873,38 +911,45 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 				checksum ^= data[0];
 
 				rChecksum = data[STM32_MAX_FRAME + 1];
-
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdWriteMem] checksum = %d | rChecksum = %d\n", checksum, rChecksum);
-
+#endif
 				if(checksum == rChecksum)
 				{
 					uint32_t addressOffset = rAddress - oldRaddress;
 					oldRaddress = rAddress;
 					realAddress += addressOffset;
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdWriteMem] addressOffset = 0x%x | realAddress = 0x%x\n", (int)addressOffset, (int)realAddress);
-
+#endif
 					/// write to flash
 					storageFlash_writeData(realAddress, data + 1, 256);
 
 					/// send ack
 					uartBootLoaderSendAck();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte...\n");
-					state = 4;
+#endif
+					state = CMD_WRITE_MEM_STATE_DONE;
 				}
 				else
 				{
 					uartBootLoaderSendNack();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdWriteMem] state 3 send nack byte...\n");
+#endif
 				}
 			}
 		}break;
-		case 4:
+		case CMD_WRITE_MEM_STATE_DONE:
 		{
-			state = 0;
+			printf("\n[uartBootLoaderResponseCmdWriteMem] response cmd write memory successful...\n");
+
+			state = CMD_WRITE_MEM_STATE_REPONSE_ACK_BEGIN;
 			rAddress = 0;
+			getStartAddress = false;
+			oldRaddress = 0;
+			realAddress = 0;
 
 			return true;
 		}break;
@@ -929,8 +974,9 @@ static bool uartBootLoaderResponseCmdGo(void)
 		{
 			/// response ack to host
 			uartBootLoaderSendAck();
+#if(USE_CONSOLE_DEBUG == 1)
 			printf("\n[uartBootLoaderResponseCmdGo] send Ack byte...\n");
-
+#endif
 			state = 1;
 		}break;
 		case 1:
@@ -942,7 +988,9 @@ static bool uartBootLoaderResponseCmdGo(void)
 					if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 					{
 						addressBuffer[i] = rData;
+#if(USE_CONSOLE_DEBUG == 1)
 						printf("\n[uartBootLoaderResponseCmdGo] reciever byte = 0x%x | len = %d\n", rData, rBufferRxU2.len);
+#endif
 					}
 				}
 
@@ -953,22 +1001,24 @@ static bool uartBootLoaderResponseCmdGo(void)
 
 				uint8_t checksum = uartBootLoaderChecksumCalculator(0, addressBuffer, 4);
 				uint8_t rChecksum = addressBuffer[4];
-
+#if(USE_CONSOLE_DEBUG == 1)
 				printf("\n[uartBootLoaderResponseCmdGo] checksum = 0x%x | rChecksum = %d\n", checksum, rChecksum);
-
+#endif
 				if(checksum == rChecksum)
 				{
 					/// send ack to host
 					uartBootLoaderSendAck();
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdGo] send Ack byte...\n");
-
+#endif
 					state = 2;
 				}
 				else
 				{
 					uartBootLoaderSendNack();
-
+#if(USE_CONSOLE_DEBUG == 1)
 					printf("\n[uartBootLoaderResponseCmdGo] state 1 send nack byte...\n");
+#endif
 					state = 10;
 				}
 			}
@@ -985,6 +1035,7 @@ static bool uartBootLoaderResponseCmdGo(void)
 }
 
 /** @brief  uartBootLoaderStateConnected
+ *  @param[in] boot : struct quan li cac bien boot loader
     @return bool
 */
 static void uartBootLoaderStateConnected(uartBootLoader_t *boot)
@@ -1025,13 +1076,12 @@ static void uartBootLoaderStateConnected(uartBootLoader_t *boot)
 				boot->rCmd = BOOTLOADER_CMD_NONE;
 			}
 		}break;
-		case BOOTLOADER_CMD_GO:
+		case BOOTLOADER_CMD_GO: /// bug : cmd go tu app chua gui address
 		{
-			uartBootLoaderJumToApplication();
 //			if(uartBootLoaderResponseCmdGo() == true)
 //			{
-//				boot->state = BOOTLOADER_STATE_DONE;
-//				printf("\n[uartBootLoaderStateConnected] jum to application\n");
+				boot->state = BOOTLOADER_STATE_RESET_PARAM_BOOTLOADER;
+				printf("\n[uartBootLoaderStateConnected] reset param enable boot loader\n");
 //			}
 		}break;
 		case BOOTLOADER_CMD_WRITE_MEMORY:
@@ -1070,10 +1120,6 @@ static void uartBootLoaderStateConnected(uartBootLoader_t *boot)
 				boot->rCmd = BOOTLOADER_CMD_NONE;
 			}
 		}break;
-		case BOOTLOADER_CMD_GET_CHECKSUM:
-		{
-
-		}break;
 	}
 }
 
@@ -1097,7 +1143,7 @@ void uartBootLoaderProcess(void)
 	{
 		case BOOTLOADER_STATE_IDLE:
 		{
-			if(uartBootLoaderRecieverCmdConnect(&boot) == true)
+			if(uartBootLoaderRecieverCmdConnect() == true)
 			{
 				boot.state = BOOTLOADER_STATE_CONNECTED;
 			}
@@ -1106,16 +1152,21 @@ void uartBootLoaderProcess(void)
 		{
 			uartBootLoaderStateConnected(&boot);
 		}break;
-		case BOOTLOADER_STATE_ERASE:
+		case BOOTLOADER_STATE_RESET_PARAM_BOOTLOADER:
 		{
+//			uint32_t startSectorAddress = ADDR_FLASH_SECTOR_11;
+//			uint8_t Data = 0x01;
+//			printf("\n[uartBootLoaderStateConnected] write to address 0x%x with value = 0x%x\n", (int)startSectorAddress, (int)Data);
+//			storageFlash_writeData(startSectorAddress, &Data, 1);
+//			uint8_t data;
+//			storageFlash_readData(startSectorAddress, &data, 1);
+//			printf("\n[uartBootLoaderStateConnected] read to address 0x%x with value = 0x%x\n", (int)startSectorAddress, data);
 
-		}break;
-		case BOOTLOADER_STATE_WRITE:
-		{
-
+			boot.state = BOOTLOADER_STATE_DONE;
 		}break;
 		case BOOTLOADER_STATE_DONE:
 		{
+			printf("\n[uartBootLoaderStateConnected] jum to application\n");
 			uartBootLoaderJumToApplication();
 		}break;
 		case BOOTLOADER_STATE_ERROR:
