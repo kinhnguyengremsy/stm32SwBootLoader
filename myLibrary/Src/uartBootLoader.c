@@ -27,7 +27,7 @@
 #include "ringBuffer.h"
 #include "storageFlash.h"
 /* Private typedef----------------------------------------------------------------------------*/
-struct
+struct _bootLoaderCmdList
 {
 	uint8_t cmdHeader;
 	uint8_t cmdFooter;
@@ -40,7 +40,7 @@ struct
 		{.cmdHeader = UART_BOOTLOADER_CMD_READ_MEMORY		, .cmdFooter = 0xEE},
 		{.cmdHeader = UART_BOOTLOADER_CMD_GO				, .cmdFooter = 0xDE},
 		{.cmdHeader = UART_BOOTLOADER_CMD_WRITE_MEMORY		, .cmdFooter = 0xCE},
-		{.cmdHeader = UART_BOOTLOADER_CMD_ERASE				, .cmdFooter = 0xBC},
+		{.cmdHeader = UART_BOOTLOADER_CMD_ERASE				, .cmdFooter = 0xBB},
 		{.cmdHeader = UART_BOOTLOADER_CMD_WRITE_PROTECT		, .cmdFooter = 0x9C},
 		{.cmdHeader = UART_BOOTLOADER_CMD_WRITE_UNPROTECT	, .cmdFooter = 0x8C},
 		{.cmdHeader = UART_BOOTLOADER_CMD_READ_PROTECT		, .cmdFooter = 0x7D},
@@ -48,7 +48,7 @@ struct
 		{.cmdHeader = UART_BOOTLOADER_CMD_GET_CHECKSUM		, .cmdFooter = 0x5E},
 };
 
-struct
+struct _bootLoaderCmdStr_t
 {
 	char *str;
 }bootLoaderCmdStr_t[13] = {
@@ -341,7 +341,7 @@ static bool uartBootLoaderResponseCmdGet(void)
 												, cmd.writeUnProtectCmd
 												, cmd.readOutProtectCmd
 												, cmd.readOutUnProtectCmd
-												, cmd.getChecksumCmd
+//												, cmd.getChecksumCmd
 												, UART_BOOTLOADER_ACK};
 
 	uartBootLoaderSendMoreByte(buffer, BOOTLOADER_CMD_GET_LEN);
@@ -440,7 +440,7 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 
 				uint8_t checksum = uartBootLoaderChecksumCalculator(0, addressBuffer, 4);
 				uint8_t rChecksum = addressBuffer[4];
-				printf("\n[uartBootLoaderResponseCmdReadMem] address = 0x%x | checksum = 0x%x | rChecksum = 0x%x\n", rAddress, checksum, rChecksum);
+				printf("\n[uartBootLoaderResponseCmdReadMem] address = 0x%x | checksum = 0x%x | rChecksum = 0x%x\n", (int)rAddress, (int)checksum, (int)rChecksum);
 
 				if(checksum == rChecksum)
 				{
@@ -551,6 +551,22 @@ static bool uartBootLoaderResponseCmdReadOUP(void)
 	return true;
 }
 
+/** @brief  usartBootLoaderFindValue
+    @return bool
+*/
+static uint16_t usartBootLoaderFindValue(uint32_t value, uint32_t *buffer, uint16_t len)
+{
+	for(uint16_t i = 0; i < len; i++)
+	{
+		if(value == buffer[i])
+		{
+			return i;
+		}
+	}
+
+	return 0;
+}
+
 /** @brief  uartBootLoaderResponseCmdErase
     @return bool
 */
@@ -558,8 +574,11 @@ static bool uartBootLoaderResponseCmdErase(void)
 {
 	static uint8_t state = 0;
 	uint8_t rData = 0;
-	uint8_t massEraseBuffer[3] = {0xff, 0xff, 0x00};
-	uint8_t trueDataCount = 0;
+//	uint8_t massEraseBuffer[3] = {0xff, 0xff, 0x00};
+	uint16_t externedEraseBuffer[3] = {0xffff, 0xfffe, 0xfffd};
+	uint16_t externedErase = 0;
+	uint8_t eraseBuffer[2] = {0, 0};
+	uint16_t trueDataCount = 0;
 	uint32_t startSectorAddress = ADDRESS_START_APPLICATION;
 	uint32_t offsets = 0x00020000;
 
@@ -575,21 +594,42 @@ static bool uartBootLoaderResponseCmdErase(void)
 		}break;
 		case 1:
 		{
-			if(rBufferRxU2.len == 3)
+			if(rBufferRxU2.len == 2)
 			{
-				for(uint8_t i = 0; i < 3; i++)
+				for(uint8_t i = 0; i < 2; i++)
 				{
 					if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
 					{
-						if(rData == massEraseBuffer[i])
-						{
-							trueDataCount++;
-						}
+						eraseBuffer[i] = rData;
+						printf("\n[uartBootLoaderResponseCmdErase] reciever byte = 0x%x | len = %d\n", rData, rBufferRxU2.len);
 					}
 				}
 
-				storageFlash_EraseSector(startSectorAddress, offsets);
-				storageFlash_EraseSector(startSectorAddress + offsets, offsets);
+				externedErase = eraseBuffer[1] << 8 | eraseBuffer[0];
+				printf("\n[uartBootLoaderResponseCmdErase] externedErase = 0x%x\n", rData, rBufferRxU2.len);
+
+				trueDataCount = usartBootLoaderFindValue((uint32_t)externedErase, (uint32_t)externedEraseBuffer, 3);
+
+				switch(trueDataCount)
+				{
+					case 0:
+					{
+						storageFlash_EraseSector(startSectorAddress, offsets);
+						storageFlash_EraseSector(startSectorAddress + offsets, offsets);
+					}break;
+					case 1: /// mass Erase
+					{
+
+					}break;
+					case 2: /// Bank1 Erase
+					{
+
+					}break;
+					case 3: /// Bank2 Erase
+					{
+
+					}break;
+				}
 
 				if(trueDataCount == 3)
 				{
@@ -611,6 +651,7 @@ static bool uartBootLoaderResponseCmdErase(void)
 
 	return false;
 }
+
 
 /** @brief  uartBootLoaderResponseCmdWriteMem
     @return bool

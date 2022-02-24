@@ -12,8 +12,8 @@ uartBootLoader.c:405:13:uartBootLoaderResponseCmdReadMem	288	static
 uartBootLoader.c:533:13:uartBootLoaderResponseCmdReadOP	8	static
 uartBootLoader.c:545:13:uartBootLoaderResponseCmdReadOUP	8	static
 uartBootLoader.c:557:13:uartBootLoaderResponseCmdErase	24	static
-uartBootLoader.c:618:13:uartBootLoaderResponseCmdWriteMem	288	static
-uartBootLoader.c:746:13:uartBootLoaderResponseCmdGo	24	static
-uartBootLoader.c:817:13:uartBootLoaderStateConnected	16	static
-uartBootLoader.c:919:13:uartBootLoaderJumToApplication	24	static,ignoring_inline_asm
-uartBootLoader.c:945:6:uartBootLoaderProcess	8	static
+uartBootLoader.c:619:13:uartBootLoaderResponseCmdWriteMem	288	static
+uartBootLoader.c:747:13:uartBootLoaderResponseCmdGo	24	static
+uartBootLoader.c:818:13:uartBootLoaderStateConnected	16	static
+uartBootLoader.c:920:13:uartBootLoaderJumToApplication	24	static,ignoring_inline_asm
+uartBootLoader.c:946:6:uartBootLoaderProcess	8	static
