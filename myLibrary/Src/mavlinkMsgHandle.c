@@ -221,6 +221,61 @@ static void mavlinkMsg_sendLogRequestEnd(mavlink_channel_t channel, mavlink_log_
     }
 }
 
+/** @brief  mavlinkMsg_sendLogRequestData
+    @return none
+*/
+static void mavlinkMsg_sendCmdLong( float param1,
+									float param2,
+									float param3,
+									float param4,
+									float param5,
+									float param6,
+									float param7,
+									uint16_t command,
+									uint8_t target_system,
+									uint8_t target_component,
+									uint8_t confirmation,
+									mavlink_channel_t channel)
+{
+	mavlink_message_t 			msg;
+	mavlink_command_long_t 		command_long;
+	uint16_t 					len = 0;
+
+	command_long.command = command;
+	command_long.confirmation = confirmation;
+	command_long.param1 = param1;
+	command_long.param2 = param2;
+	command_long.param3 = param3;
+	command_long.param4 = param4;
+	command_long.param5 = param5;
+	command_long.param6 = param6;
+	command_long.param7 = param7;
+	command_long.target_component = target_component;
+	command_long.target_system = target_system;
+
+    /*
+      save and restore sequence number for chan, as it is used by
+      generated encode functions
+     */
+
+    mavlink_status_t    *chan_status = mavlink_get_channel_status(channel);
+    uint8_t saved_seq = chan_status->current_tx_seq;
+
+    /// encode msg
+    mavlink_msg_command_long_encode_chan(1, MAV_COMP_ID_SYSTEM_CONTROL, channel, &msg, &command_long);
+
+
+    chan_status->current_tx_seq = saved_seq;
+
+    uint8_t msgbuf[MAVLINK_MAX_PACKET_LEN];
+    len = mavlink_msg_to_send_buffer(msgbuf, &msg);
+
+    if(len > 0)
+    {
+        _mavlink_send_uart(channel,(const char*) msgbuf, len);
+    }
+}
+
 /** @brief  mavlinkMsg_RecieverProcess
     @return none
 */
@@ -499,6 +554,24 @@ void mavlinkMsg_send_logRequestEnd(uint8_t channel)
 	mavlinkMsg_sendLogRequestEnd(channel, log_request_end);
 	printf("\n[mavlinkMsg_send_logRequestEnd] channel %d send msg successful | \ntarget_component = %d\ntarget_system%d\n"
 			, channel, log_request_end.target_component, log_request_end.target_system);
+}
+
+/** @brief  mavlinkMsg_process
+ *  @param[in] channel kenh gui msg
+    @return none
+*/
+void mavlinkMsg_send_heartbeat(uint8_t channel)
+{
+	mavlinkMsg_sendHeartBeat((mavlink_channel_t)channel);
+}
+
+/** @brief  mavlinkMsg_send_cmdJumTarget
+ *  @param[in] channel kenh gui msg
+    @return none
+*/
+void mavlinkMsg_send_cmdJumTarget(uint8_t channel)
+{
+	mavlinkMsg_sendCmdLong(0, 0, 0, 0, 0, 0, 0, MAV_CMD_JUMP_TAG, 10, 100, 0, (mavlink_channel_t)channel);
 }
 
 /** @brief  mavlinkMsg_process

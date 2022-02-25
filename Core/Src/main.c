@@ -21,8 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#if (USE_MAVLINK_BOOTLOADER == 1)
 #include "swBootLoader.h"
 #include "sotfEmulations.h"
+#endif
 
 #if (USE_HOST_BOOTLOADER == 1)
 #include "hostUartBootLoader.h"
@@ -41,7 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-uint32_t ADDRESS_START_BLINK_LED_APPLICATION = 0x08020000;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -117,14 +119,16 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
-//	swBootLoaderConfiguration();
+#if (USE_MAVLINK_BOOTLOADER == 1)
+	swBootLoaderConfiguration();
 
 //	sotfEmulations_configuration();
+#endif
 
 #if (USE_HOST_BOOTLOADER == 1)
   hostUartBootLoaderConfiguration();
 #endif
+
 #if (USE_DEVICE_BOOTLOADER == 1)
   uartBootLoaderConfiguration();
 #endif
@@ -134,12 +138,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-//	  swBootLoader_process();
+#if (USE_MAVLINK_BOOTLOADER == 1)
+	  swBootLoader_process();
+#endif
 
 #if (USE_HOST_BOOTLOADER == 1)
 	  hostUartBootLoaderProcess();
 #endif
+
 #if (USE_DEVICE_BOOTLOADER == 1)
 	  uartBootLoaderProcess();
 #endif

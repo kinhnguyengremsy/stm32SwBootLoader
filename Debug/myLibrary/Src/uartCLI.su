@@ -1,0 +1,2 @@
+uartCLI.c:42:6:uartCLI_configuration	4	static
+uartCLI.c:73:6:uartCLI_process	4	static

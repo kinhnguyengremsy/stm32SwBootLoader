@@ -99,12 +99,21 @@ void mavlinkProtocol_serialPort4_Deinit(void)
  */
 void mavlinkProtocol_init(void)
 {
-    mavlinkProtocol_serialPort3_init();
+	#if (USE_HOST_BOOTLOADER == 1)
+		mavlinkProtocol_serialPort4_init();
+		printf("              : UART4 (tx : C10, rx : C11) -> COM4\n");
+	#endif
+	#if (USE_DEVICE_BOOTLOADER == 1)
 
-    mavlinkProtocol_serialPort4_init();
-
-    printf("mavlinkPinout : USART2 (tx : A2, rx : A3)  -> COM2\n");
-    printf("              : UART4 (tx : C10, rx : C11) -> COM4\n");
+	#endif
+	#if (USE_MAVLINK_BOOTLOADER == 1)
+		mavlinkProtocol_serialPort3_init();
+		printf("mavlinkPinout : USART2 (tx : A2, rx : A3)  -> COM2\n");
+	#endif
+	#if (USE_MAVLINK_CONTROL == 1)
+		mavlinkProtocol_serialPort3_init();
+		printf("mavlinkPinout : USART2 (tx : A2, rx : A3)  -> COM2\n");
+	#endif
 }
 
 
@@ -213,7 +222,6 @@ void comm_send_buffer(mavlink_channel_t chan, const uint8_t *buf, uint8_t len)
         serialPort_write_list(&serial_port4, (uint8_t *)buf);
     }
 }
-
 
 
 #endif

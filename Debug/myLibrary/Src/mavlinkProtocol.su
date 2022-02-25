@@ -43,6 +43,6 @@ mavlinkProtocol.c:65:6:mavlinkProtocol_serialPort3_Deinit	8	static
 mavlinkProtocol.c:74:6:mavlinkProtocol_serialPort4_init	8	static
 mavlinkProtocol.c:88:6:mavlinkProtocol_serialPort4_Deinit	8	static
 mavlinkProtocol.c:100:6:mavlinkProtocol_init	8	static
-mavlinkProtocol.c:124:6:mavlinkProtocol_serialPort3_readData	32	static
-mavlinkProtocol.c:155:6:mavlinkProtocol_serialPort4_readData	32	static
-mavlinkProtocol.c:199:6:comm_send_buffer	16	static
+mavlinkProtocol.c:133:6:mavlinkProtocol_serialPort3_readData	32	static
+mavlinkProtocol.c:164:6:mavlinkProtocol_serialPort4_readData	32	static
+mavlinkProtocol.c:208:6:comm_send_buffer	16	static

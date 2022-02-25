@@ -22,18 +22,52 @@
 */
 /* Includes------------------------------------------------------------------------------*/
 #include "uartCallback.h"
-#include "serialPort.h"
-#include "ringBuffer.h"
-#include "hostUartBootLoader.h"
+#if (USE_HOST_BOOTLOADER == 1)
+	#include "hostUartBootLoader.h"
+	#include "serialPort.h"
+#endif
+#if (USE_DEVICE_BOOTLOADER == 1)
+	#include "ringBuffer.h"
+#endif
+#if (USE_MAVLINK_BOOTLOADER == 1)
+	#include "serialPort.h"
+#endif
+#if (USE_MAVLINK_CONTROL == 1)
+	#include "serialPort.h"
+#endif
+
+#if (USE_COMMAND_LINE_INTERFACE == 1)
+	#include "ringBuffer.h"
+#endif
 /* Private typedef------------------------------------------------------------------------------*/
 /* Private define------------------------------------------------------------------------------*/
 /* Private macro------------------------------------------------------------------------------*/
 /* Private variables------------------------------------------------------------------------------*/
-extern serialPort_t 		serial_port2;
-extern UART_HandleTypeDef 	huart2;
-extern ringBuffer_t 		rBufferRxU2;
-extern uint8_t 				usart2WData;
-bool txComplete;
+#if (USE_HOST_BOOTLOADER == 1)
+	extern serialPort_t 		serial_port2;
+	extern UART_HandleTypeDef 	huart2;
+#endif
+#if (USE_DEVICE_BOOTLOADER == 1)
+	extern ringBuffer_t 		rBufferRxU2;
+	extern uint8_t 				usart2WData;
+	bool txComplete;
+#endif
+#if (USE_MAVLINK_BOOTLOADER == 1)
+	extern serialPort_t 		serial_port2;
+	extern UART_HandleTypeDef 	huart2;
+#endif
+
+#if (USE_MAVLINK_CONTROL == 1)
+	extern serialPort_t 		serial_port2;
+	extern UART_HandleTypeDef 	huart2;
+#endif
+
+#if (USE_COMMAND_LINE_INTERFACE == 1)
+	extern UART_HandleTypeDef 	huart1;
+	extern ringBuffer_t 		rBufferRxU1;
+	extern uint8_t 				usart1WData;
+#endif
+
 
 #if (USE_HOST_BOOTLOADER == 1)
 extern serialPort_t 		serial_port4;
@@ -55,26 +89,32 @@ extern uint8_t 				wData;
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 
-//    if(serial_port2.zPrivate.uartHandle.Instance == USART2)
-//    {
-//        serialPort_tx_finish(&serial_port2);
-//    }
-//
-//    if(serial_port4.zPrivate.uartHandle.Instance == UART4)
-//    {
-//        serialPort_tx_finish(&serial_port4);
-//    }
-	if(huart->Instance == huart2.Instance)
-	{
-//		serialPort_tx_finish(&serial_port2);
-		txComplete = true;
-	}
-#if (USE_HOST_BOOTLOADER == 1)
-	else if(huart->Instance == UART4)
-	{
-		serialPort_tx_finish(&serial_port4);
-	}
-#endif
+	#if (USE_DEVICE_BOOTLOADER == 1)
+		if(huart->Instance == huart2.Instance)
+		{
+			txComplete = true;
+		}
+	#endif
+
+	#if (USE_HOST_BOOTLOADER == 1)
+		if(huart->Instance == huart4.Instance)
+		{
+			serialPort_tx_finish(&serial_port4);
+		}
+	#endif
+
+	#if (USE_MAVLINK_BOOTLOADER == 1)
+		if(huart->Instance == huart2.Instance)
+		{
+			serialPort_tx_finish(&serial_port2);
+		}
+	#endif
+	#if (USE_MAVLINK_CONTROL == 1)
+		if(huart->Instance == huart2.Instance)
+		{
+			serialPort_tx_finish(&serial_port2);
+		}
+	#endif
 }
 
 #endif
@@ -91,16 +131,39 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	if(huart->Instance == huart2.Instance)
-	{
-		ringBufferWrite(&rBufferRxU2, usart2WData);
-	}
-#if (USE_HOST_BOOTLOADER == 1)
-	else if(huart->Instance == huart4.Instance)
-	{
-		ringBufferWrite(&rBufferRxU4, wData);
-	}
-#endif
+	#if (USE_DEVICE_BOOTLOADER == 1)
+		if(huart->Instance == huart2.Instance)
+		{
+			ringBufferWrite(&rBufferRxU2, usart2WData);
+		}
+	#endif
+
+	#if (USE_HOST_BOOTLOADER == 1)
+		if(huart->Instance == huart4.Instance)
+		{
+
+		}
+	#endif
+
+	#if (USE_MAVLINK_BOOTLOADER == 1)
+		if(huart->Instance == huart2.Instance)
+		{
+
+		}
+	#endif
+	#if (USE_MAVLINK_CONTROL == 1)
+		if(huart->Instance == huart2.Instance)
+		{
+
+		}
+	#endif
+
+	#if (USE_COMMAND_LINE_INTERFACE == 1)
+		if(huart->Instance == huart1.Instance)
+		{
+			ringBufferWrite(&rBufferRxU1, usart1WData);
+		}
+	#endif
 }
 
 #endif

@@ -127,6 +127,18 @@ uint8_t mavlinkMsg_isLogData(uint8_t channel);
 uint8_t mavlinkMsg_isLogRequestEnd(uint8_t channel);
 
 /** @brief  mavlinkMsg_process
+ *  @param[in] channel kenh gui msg
+    @return none
+*/
+void mavlinkMsg_send_heartbeat(uint8_t channel);
+
+/** @brief  mavlinkMsg_send_cmdJumTarget
+ *  @param[in] channel kenh gui msg
+    @return none
+*/
+void mavlinkMsg_send_cmdJumTarget(uint8_t channel);
+
+/** @brief  mavlinkMsg_process
     @return none
 */
 void mavlinkMsg_process(void);

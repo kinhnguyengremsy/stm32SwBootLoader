@@ -22,6 +22,7 @@
 "./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o"
 "./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o"
 "./myLibrary/Src/hostUartBootLoader.o"
+"./myLibrary/Src/mavlinkControl.o"
 "./myLibrary/Src/mavlinkMsgHandle.o"
 "./myLibrary/Src/mavlinkProtocol.o"
 "./myLibrary/Src/ringBuffer.o"
@@ -30,4 +31,5 @@
 "./myLibrary/Src/storageFlash.o"
 "./myLibrary/Src/swBootLoader.o"
 "./myLibrary/Src/uartBootLoader.o"
+"./myLibrary/Src/uartCLI.o"
 "./myLibrary/Src/uartCallback.o"

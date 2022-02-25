@@ -145,7 +145,7 @@ static void uartBootLoaderJumToApplication(void)
 void uartBootLoaderConfiguration(void)
 {
 	huart2.Instance 				= USART2;
-	huart2.Init.BaudRate 			= 115200 ;
+	huart2.Init.BaudRate 			= 460800 ;
 	huart2.Init.WordLength 			= UART_WORDLENGTH_9B;
 	huart2.Init.StopBits 			= UART_STOPBITS_1;
 	huart2.Init.Parity 				= UART_PARITY_EVEN;
