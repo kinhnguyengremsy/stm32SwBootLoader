@@ -26,10 +26,37 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "ringBuffer.h"
 /* Exported define ------------------------------------------------------------*/
-
+#define MAX_NUMBER_CMD_CLI	(8 + 1)
 /* Exported types ------------------------------------------------------------*/
+typedef enum _cmdIndex_t
+{
+	CMD_CLI_NONE,
+	CMD_CLI_00,
+	CMD_CLI_01,
+	CMD_CLI_02,
+	CMD_CLI_03,
+	CMD_CLI_04,
+	CMD_CLI_05,
+	CMD_CLI_06,
+	CMD_CLI_07,
+	CMD_CLI_08,
 
+}cmdIndex_t;
+
+typedef struct
+{
+	bool flagMsgHeartBeat;
+	bool flagMsgJumTarget;
+	bool flagStorageWrite;
+	bool flagStorageRead;
+
+	int value[10];
+	bool isHaveValue;
+
+	ringBuffer_t vSet;
+}uartCLI_t;
 /* Exported constants --------------------------------------------------------*/
 
 /* Exported macro ------------------------------------------------------------*/
@@ -39,7 +66,12 @@
 /** @brief  uartCLI_configuration
     @return none
 */
-void uartCLI_configuration(void);
+void uartCLI_configuration(uartCLI_t *_cli);
+
+/** @brief  __cmdCli
+    @return pointer struct support uart cli
+*/
+uartCLI_t* __cmdCli(void);
 
 /** @brief  uartCLI_process
     @return none

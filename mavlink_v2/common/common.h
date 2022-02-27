@@ -1264,7 +1264,7 @@ typedef enum RC_TYPE
 
 // MESSAGE DEFINITIONS
 #include "./mavlink_msg_heartbeat.h"
-// #include "./mavlink_msg_sys_status.h"
+ #include "./mavlink_msg_sys_status.h"
 // #include "./mavlink_msg_system_time.h"
 // #include "./mavlink_msg_ping.h"
 // #include "./mavlink_msg_change_operator_control.h"
@@ -1409,7 +1409,7 @@ typedef enum RC_TYPE
 //#include "./mavlink_msg_camera_capture_status.h"
 //#include "./mavlink_msg_camera_image_captured.h"
 //#include "./mavlink_msg_flight_information.h"
-// #include "./mavlink_msg_mount_orientation.h"
+ #include "./mavlink_msg_mount_orientation.h"
 //#include "./mavlink_msg_logging_data.h"
 //#include "./mavlink_msg_logging_data_acked.h"
 //#include "./mavlink_msg_logging_ack.h"

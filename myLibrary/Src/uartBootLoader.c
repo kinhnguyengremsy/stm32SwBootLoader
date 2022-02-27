@@ -92,7 +92,7 @@ struct _bootLoaderCmdStr_t
 };
 
 /* Private define-----------------------------------------------------------------------------*/
-
+#define ADDRESS_PARAM_BOOTLOADER	1000
 /* Private macro------------------------------------------------------------------------------*/
 /* Private variables--------------------------------------------------------------------------*/
 extern serialPort_t 		serial_port2;
@@ -139,13 +139,21 @@ static void uartBootLoaderJumToApplication(void)
 	reset_handler();
 }
 
+/** @brief  uartBootLoader_checkParam
+    @return none
+*/
+static bool uartBootLoader_checkParam(uint16_t address, uint16_t value)
+{
+	return (storageFlash_styleGremsy_read(address, &value));
+}
+
 /** @brief  uartBootLoaderConfiguration
     @return none
 */
 void uartBootLoaderConfiguration(void)
 {
 	huart2.Instance 				= USART2;
-	huart2.Init.BaudRate 			= 460800 ;
+	huart2.Init.BaudRate 			= 115200;//460800 ;
 	huart2.Init.WordLength 			= UART_WORDLENGTH_9B;
 	huart2.Init.StopBits 			= UART_STOPBITS_1;
 	huart2.Init.Parity 				= UART_PARITY_EVEN;
@@ -170,6 +178,20 @@ void uartBootLoaderConfiguration(void)
 	if(HAL_UART_Receive_DMA(&huart2, &usart2WData, 1) != HAL_OK)
 	{
 		Error_Handler();
+	}
+
+	/// config flash style gremsy
+	storageFlash_configuration();
+
+	/// check param boot loader
+	if(uartBootLoader_checkParam(ADDRESS_PARAM_BOOTLOADER, 0x01) != true)
+	{
+		printf("\n[uartBootLoaderConfiguration] enable boot loader");
+	}
+	else
+	{
+		printf("\n[uartBootLoaderConfiguration] not enable boot loader");
+		uartBootLoaderJumToApplication();
 	}
 }
 
@@ -1154,15 +1176,30 @@ void uartBootLoaderProcess(void)
 		}break;
 		case BOOTLOADER_STATE_RESET_PARAM_BOOTLOADER:
 		{
-//			uint32_t startSectorAddress = ADDR_FLASH_SECTOR_11;
-//			uint8_t Data = 0x01;
-//			printf("\n[uartBootLoaderStateConnected] write to address 0x%x with value = 0x%x\n", (int)startSectorAddress, (int)Data);
-//			storageFlash_writeData(startSectorAddress, &Data, 1);
-//			uint8_t data;
-//			storageFlash_readData(startSectorAddress, &data, 1);
-//			printf("\n[uartBootLoaderStateConnected] read to address 0x%x with value = 0x%x\n", (int)startSectorAddress, data);
+			bool readStatus = false;
+			uint16_t bootLoaderParam = 0;
+			flashStatus_t status = FLASH_STATUS_COMPLETE;
+			status = storageFlash_styleGremsy_write(ADDRESS_PARAM_BOOTLOADER, bootLoaderParam);
 
-			boot.state = BOOTLOADER_STATE_DONE;
+			if(status != FLASH_STATUS_COMPLETE)
+			{
+				boot.state = BOOTLOADER_STATE_ERROR;
+				printf("\n[uartBootLoaderStateConnected] BOOTLOADER_STATE_ERROR\n");
+			}
+
+			bootLoaderParam = 1000;
+
+			readStatus = storageFlash_styleGremsy_read(ADDRESS_PARAM_BOOTLOADER, &bootLoaderParam);
+			if(readStatus == true && bootLoaderParam == 0)
+			{
+				boot.state = BOOTLOADER_STATE_DONE;
+				printf("\n[uartBootLoaderStateConnected] bootLoaderParam = %d\n", bootLoaderParam);
+			}
+			else
+			{
+				boot.state = BOOTLOADER_STATE_ERROR;
+				printf("\n[uartBootLoaderStateConnected] BOOTLOADER_STATE_ERROR\n");
+			}
 		}break;
 		case BOOTLOADER_STATE_DONE:
 		{

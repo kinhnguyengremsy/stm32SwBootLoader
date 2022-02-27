@@ -298,18 +298,6 @@ static void mavlinkMsg_RecieverProcess(mav_state_t *mavState, mavlinkMsgHandle_t
 			(channel == MAVLINK_COMM_1) ? \
 			(mavlinkPrivate.seenHeartBeatCOM2 = true, mavlinkPrivate.enableSendHeartBeat[0] = true) : \
 			(mavlinkPrivate.seenHeartBeatCOM4 = true, mavlinkPrivate.enableSendHeartBeat[1] = true);
-//			if(channel == MAVLINK_COMM_1)
-//			{
-//				mavlinkPrivate.seenHeartBeatCOM2 = true;
-//
-//				mavlinkPrivate.enableSendHeartBeat[0] = true;
-//			}
-//			else
-//			{
-//				mavlinkPrivate.seenHeartBeatCOM4 = true;
-//
-//				mavlinkPrivate.enableSendHeartBeat[1] = true;
-//			}
 
 		}break;
 		case MAVLINK_MSG_ID_LOG_DATA :
@@ -341,6 +329,33 @@ static void mavlinkMsg_RecieverProcess(mav_state_t *mavState, mavlinkMsgHandle_t
 
 			(channel == MAVLINK_COMM_1) ? (mavlinkPrivate.isMsg_logRequestEndCOM2 = true) : (mavlinkPrivate.isMsg_logRequestEndCOM4 = true);
 		}break;
+#if (USE_MAVLINK_CONTROL == 1)
+		case MAVLINK_MSG_ID_MOUNT_ORIENTATION:
+		{
+			mavlink_mount_orientation_t mount_orientation;
+			mavlink_msg_mount_orientation_decode(&mavState->rxmsg, &mount_orientation);
+
+			memcpy(&handle->mount_orientation, &mount_orientation, sizeof(mavlink_msg_mount_orientation_t));
+		}break;
+		case MAVLINK_MSG_ID_COMMAND_ACK:
+		{
+			mavlink_command_ack_t command_ack;
+
+			memset(&command_ack, 0, sizeof(mavlink_command_ack_t));
+
+			mavlink_msg_command_ack_decode(&mavState->rxmsg, &command_ack);
+
+			memcpy(&handle->command_ack, &command_ack, sizeof(mavlink_msg_command_ack_t));
+
+			if(command_ack.command == MAV_CMD_JUMP_TAG)
+			{
+				if(command_ack.result == MAV_RESULT_ACCEPTED)
+				{
+					printf("\n[MAV_CMD_JUMP_TAG] cmd accepted\n");
+				}
+			}
+		}break;
+#endif
 		default :
 		{
 
@@ -351,7 +366,7 @@ static void mavlinkMsg_RecieverProcess(mav_state_t *mavState, mavlinkMsgHandle_t
 /** @brief  mavlinkMsg_readData
     @return none
 */
-static void mavlinkMsg_readData(void)
+void mavlinkMsg_readData(void)
 {
 	if(mavlinkProtocol_serialPort3_readData(&mav_state_COM2) == true)
 	{
@@ -363,15 +378,15 @@ static void mavlinkMsg_readData(void)
 		}
 	}
 
-	if(mavlinkProtocol_serialPort4_readData(&mav_state_COM4) == true)
-	{
-//		mavlink_status_t *chanStatus = mavlink_get_channel_status(MAVLINK_COMM_2);
-
-		if(1)//chanStatus->parse_state == MAVLINK_PARSE_STATE_IDLE)
-		{
-			mavlinkMsg_RecieverProcess(&mav_state_COM4, &mavlinkCOM4, MAVLINK_COMM_2);
-		}
-	}
+//	if(mavlinkProtocol_serialPort4_readData(&mav_state_COM4) == true)
+//	{
+////		mavlink_status_t *chanStatus = mavlink_get_channel_status(MAVLINK_COMM_2);
+//
+//		if(1)//chanStatus->parse_state == MAVLINK_PARSE_STATE_IDLE)
+//		{
+//			mavlinkMsg_RecieverProcess(&mav_state_COM4, &mavlinkCOM4, MAVLINK_COMM_2);
+//		}
+//	}
 }
 
 #endif
@@ -571,7 +586,7 @@ void mavlinkMsg_send_heartbeat(uint8_t channel)
 */
 void mavlinkMsg_send_cmdJumTarget(uint8_t channel)
 {
-	mavlinkMsg_sendCmdLong(0, 0, 0, 0, 0, 0, 0, MAV_CMD_JUMP_TAG, 10, 100, 0, (mavlink_channel_t)channel);
+	mavlinkMsg_sendCmdLong(0, 0, 0, 0, 0, 0, 0, MAV_CMD_JUMP_TAG, 10, MAV_COMP_ID_GIMBAL, 0, (mavlink_channel_t)channel);
 }
 
 /** @brief  mavlinkMsg_process

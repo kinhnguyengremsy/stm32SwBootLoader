@@ -41,7 +41,15 @@
 #define ADDR_FLASH_SECTOR_10    ((uint32_t)0x080C0000) /* Base @ of Sector 10, 128 Kbytes */
 #define ADDR_FLASH_SECTOR_11    ((uint32_t)0x080E0000) /* Base @ of Sector 11, 128 Kbytes */
 /* Exported types ------------------------------------------------------------*/
-
+/**
+  * @brief FLASH Status
+  */
+typedef enum flashStatus_t
+{
+  FLASH_STATUS_ER_PROGRAM,
+  FLASH_STATUS_ER_OPERATION,
+  FLASH_STATUS_COMPLETE,
+}flashStatus_t;
 /* Exported constants --------------------------------------------------------*/
 
 /* Exported macro ------------------------------------------------------------*/
@@ -93,6 +101,16 @@ void storageFlash_writeNumber(uint32_t address, float number);
     @return void
 */
 float storageFlash_readNumber(uint32_t address);
+
+/** @brief  storageFlash_styleGremsy_write
+    @return bool
+*/
+flashStatus_t storageFlash_styleGremsy_write(uint16_t address, uint16_t value);
+
+/** @brief  storageFlash_styleGremsy_read
+    @return bool
+*/
+bool storageFlash_styleGremsy_read(uint16_t address, uint16_t *data);
 
 /** @brief  storageFlash_test
     @return void

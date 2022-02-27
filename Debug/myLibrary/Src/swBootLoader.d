@@ -1,5 +1,5 @@
 myLibrary/Src/swBootLoader.o: ../myLibrary/Src/swBootLoader.c \
- D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h \
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h \
  ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -26,10 +26,10 @@ myLibrary/Src/swBootLoader.o: ../myLibrary/Src/swBootLoader.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/mavlinkMsgHandle.h \
- D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/storageFlash.h
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/mavlinkMsgHandle.h \
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/storageFlash.h
 
-D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h:
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h:
 
 ../Core/Inc/main.h:
 
@@ -85,6 +85,6 @@ D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/swBootLoader.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 
-D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/mavlinkMsgHandle.h:
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/mavlinkMsgHandle.h:
 
-D:/Gremsy/firmware/sample/stm32SwBootLoader/myLibrary/Inc/storageFlash.h:
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/storageFlash.h:

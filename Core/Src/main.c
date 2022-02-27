@@ -34,6 +34,9 @@
 #include "uartBootLoader.h"
 #endif
 
+#if(USE_MAVLINK_CONTROL == 1)
+#include "mavlinkControl.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -132,6 +135,10 @@ int main(void)
 #if (USE_DEVICE_BOOTLOADER == 1)
   uartBootLoaderConfiguration();
 #endif
+
+#if(USE_MAVLINK_CONTROL == 1)
+  mavlinhControlConfiguration();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -148,6 +155,9 @@ int main(void)
 
 #if (USE_DEVICE_BOOTLOADER == 1)
 	  uartBootLoaderProcess();
+#endif
+#if(USE_MAVLINK_CONTROL == 1)
+	  mavlinkControl_process();
 #endif
     /* USER CODE END WHILE */
 

@@ -24,11 +24,26 @@
 #include "storageFlash.h"
 #include "string.h"
 /* Private typedef------------------------------------------------------------------------------*/
+
 /* Private define------------------------------------------------------------------------------*/
+#define GREMSY_STORAGE_FLASH_EMPTY           0xEEEEEEEE
+#define GREMSY_STORAGE_FLASH_RECEIVER        0xEEEEEEEA
+#define GREMSY_STORAGE_FLASH_FULL            0xEEEEEEE0
+
+#define GREMSY_STORAGE_PARAM_NUM             80
+
+/// dinh nghia kieu data bit
+#define BYTE        1
+#define KBYTE       (1024*BYTE)
+#define MBYTE       (1024*KBYTE)
+#define GBYTE       (1024*MBYTE)
 /* Private macro------------------------------------------------------------------------------*/
 /* Private variables------------------------------------------------------------------------------*/
-bool enableTestFlash = false;
 /* Private function prototypes------------------------------------------------------------------------------*/
+/** @brief	storageFlash_styleGremsy_configuration
+    @return flashStatus_t
+*/
+static flashStatus_t storageFlash_styleGremsy_configuration(void);
 /* Private functions------------------------------------------------------------------------------*/
 
 /** @group __STORAGE_FLASH_CONFIGURATION
@@ -40,7 +55,18 @@ bool enableTestFlash = false;
 */
 void storageFlash_configuration(void)
 {
-	printf("\n[storageFlash_configuration] : \n");
+	flashStatus_t status = FLASH_STATUS_COMPLETE;
+	printf("\n[storageFlash_configuration] : nomal config\n");
+
+	status = storageFlash_styleGremsy_configuration();
+	if(status != FLASH_STATUS_COMPLETE)
+	{
+		printf("\n[storageFlash_configuration] flash config gremsy style fail \n");
+	}
+	else
+	{
+		printf("\n[storageFlash_configuration] flash config gremsy style successful \n");
+	}
 }
 
 /** @brief	float2Bytes
@@ -188,7 +214,7 @@ bool storageFlash_confirmData(char *dataConfirm, uint32_t *buffer, uint16_t leng
 
 	printf("\n[storageFlash_confirmData] RUNNING data = \"%s\"\n", dataConfirm);
 
-	storageFlash_readData(confirmAddress, buffer, len);
+	storageFlash_readData(confirmAddress, (uint8_t *)buffer, len);
 
 	if(memcmp(dataConfirm, buffer, len) == 0)
 	{
@@ -299,7 +325,7 @@ void storageFlash_writeNumber(uint32_t address, float number)
 	uint8_t bytes_temp[4];
 
 	float2Bytes(bytes_temp, number);
-	storageFlash_writeData(address, (uint32_t *)bytes_temp, 1);
+//	storageFlash_writeData(address, (uint32_t *)bytes_temp, 1);
 }
 
 /** @brief  storageFlash_readNumber
@@ -308,9 +334,9 @@ void storageFlash_writeNumber(uint32_t address, float number)
 float storageFlash_readNumber(uint32_t address)
 {
 	uint8_t buffer[4];
-	float value;
+	float value = 0;
 
-	storageFlash_readData(address, (uint32_t *)buffer, 1);
+//	storageFlash_readData(address, (uint32_t *)buffer, 1);
 	value = Bytes2float(buffer);
 
 	return value;
@@ -321,43 +347,558 @@ float storageFlash_readNumber(uint32_t address)
 */
 void storageFlash_test(void)
 {
-	if(enableTestFlash == false)
+//	static bool enableTestFlash = false;
+//	if(enableTestFlash == false)
+//	{
+//		enableTestFlash = true;
+//
+////		char *Data = "nguyen van kinh 123456789";
+////		uint32_t Data[] = {0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111};
+//		uint8_t Data[] ={1, 2, 3, 4, 5, 6, 7, 8, 9};
+//		int numberOfWords = 0;
+//
+//		numberOfWords = 9;//storageFlash_getStringLen(Data);
+//
+//		printf("\n[swBootLoader_process] write to flash : %s\n", Data);
+//
+//		if(storageFlash_writeData(ADDR_FLASH_SECTOR_6, Data, numberOfWords) == false)
+//		{
+//			printf("\n[swBootLoader_process] write to flash : DONE\n");
+//		}
+//
+//		if(storageFlash_writeDataNonErase(ADDR_FLASH_SECTOR_6 + 8, Data, numberOfWords) == false)
+//		{
+//			printf("\n[swBootLoader_process] write to flash : DONE\n");
+//		}
+//
+//		if(storageFlash_writeDataNonErase(ADDR_FLASH_SECTOR_6 + 17, Data, numberOfWords) == false)
+//		{
+//			printf("\n[swBootLoader_process] write to flash : DONE\n");
+//		}
+//
+//		uint32_t rxBuffer[numberOfWords];
+//		printf("\n[swBootLoader_process] read from flash startAddress 0x%x\n", (int)ADDR_FLASH_SECTOR_6);
+//
+//		storageFlash_readData(ADDR_FLASH_SECTOR_6, rxBuffer, numberOfWords);
+//
+//		if(memcmp(rxBuffer, Data, numberOfWords) == 0)
+//		printf("\n[swBootLoader_process] read from flash address 0x%x value %s\n", (int)ADDR_FLASH_SECTOR_6, rxBuffer);
+
+//	}
+}
+
+#endif
+/**
+    @}
+*/
+
+/** @group __STORAGE_FLASH_STYLE_GREMSY
+    @{
+*/#ifndef __STORAGE_FLASH_STYLE_GREMSY
+#define __STORAGE_FLASH_STYLE_GREMSY
+/** @brief	storageFlash_format
+    @return flashStatus_t
+*/
+static flashStatus_t storageFlash_format(void)
+{
+	uint32_t page0Address = ADDR_FLASH_SECTOR_10;
+	uint32_t page1Address = ADDR_FLASH_SECTOR_11;
+
+	if(storageFlash_EraseSector(page0Address, 0x20000) != 0)
 	{
-		enableTestFlash = true;
-
-//		char *Data = "nguyen van kinh 123456789";
-//		uint32_t Data[] = {0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111, 0x11111111};
-		uint8_t Data[] ={1, 2, 3, 4, 5, 6, 7, 8, 9};
-		int numberOfWords = 0;
-
-		numberOfWords = 9;//storageFlash_getStringLen(Data);
-
-		printf("\n[swBootLoader_process] write to flash : %s\n", Data);
-
-		if(storageFlash_writeData(ADDR_FLASH_SECTOR_6, Data, numberOfWords) == false)
-		{
-			printf("\n[swBootLoader_process] write to flash : DONE\n");
-		}
-
-		if(storageFlash_writeDataNonErase(ADDR_FLASH_SECTOR_6 + 8, Data, numberOfWords) == false)
-		{
-			printf("\n[swBootLoader_process] write to flash : DONE\n");
-		}
-
-		if(storageFlash_writeDataNonErase(ADDR_FLASH_SECTOR_6 + 17, Data, numberOfWords) == false)
-		{
-			printf("\n[swBootLoader_process] write to flash : DONE\n");
-		}
-
-		uint32_t rxBuffer[numberOfWords];
-		printf("\n[swBootLoader_process] read from flash startAddress 0x%x\n", (int)ADDR_FLASH_SECTOR_6);
-
-		storageFlash_readData(ADDR_FLASH_SECTOR_6, rxBuffer, numberOfWords);
-
-		if(memcmp(rxBuffer, Data, numberOfWords) == 0)
-		printf("\n[swBootLoader_process] read from flash address 0x%x value %s\n", (int)ADDR_FLASH_SECTOR_6, rxBuffer);
-
+		printf("\n[storageFlash_format] erase page1 fail ...\n");
+		return FLASH_STATUS_ER_PROGRAM;
 	}
+
+	/* Unlock the Flash to enable the flash control register access *************/
+	HAL_FLASH_Unlock();
+
+	// ghi gia tri page reciever vao page0
+	if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, page0Address, GREMSY_STORAGE_FLASH_RECEIVER) != HAL_OK)
+	{
+		printf("\n[storageFlash_format] write to page0 value reciever fail ...\n");
+		return FLASH_STATUS_ER_PROGRAM;
+	}
+
+	/* Lock the Flash to disable the flash control register access (recommended
+	 to protect the FLASH memory against possible unwanted operation) *********/
+	HAL_FLASH_Lock();
+
+	/// erase page1
+	if(storageFlash_EraseSector(page1Address, 0x20000) != 0)
+	{
+		printf("\n[storageFlash_format] erase page1 fail ...\n");
+		return FLASH_STATUS_ER_PROGRAM;
+	}
+
+	/* Unlock the Flash to enable the flash control register access *************/
+	HAL_FLASH_Unlock();
+
+	// ghi gia tri page reciever vao page1
+	if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, page1Address, GREMSY_STORAGE_FLASH_EMPTY) != HAL_OK)
+	{
+		printf("\n[storageFlash_format] write to page1 value reciever fail ...\n");
+		return FLASH_STATUS_ER_PROGRAM;
+	}
+
+	/* Lock the Flash to disable the flash control register access (recommended
+	 to protect the FLASH memory against possible unwanted operation) *********/
+	HAL_FLASH_Lock();
+
+	return FLASH_STATUS_COMPLETE;
+}
+
+/** @brief	storageFlash_styleGremsy_configuration
+    @return flashStatus_t
+*/
+static flashStatus_t storageFlash_styleGremsy_configuration(void)
+{
+	flashStatus_t status = FLASH_STATUS_COMPLETE;
+	uint32_t page0Address = ADDR_FLASH_SECTOR_10;
+	uint32_t page1Address = ADDR_FLASH_SECTOR_11;
+	uint32_t page0Status = (*(uint32_t *)ADDR_FLASH_SECTOR_10);
+	uint32_t page1Status = (*(uint32_t *)ADDR_FLASH_SECTOR_11);
+
+	/// clear pending flag (if any)
+	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR  | FLASH_FLAG_WRPERR |
+            FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+
+	printf("\n[storageFlash_styleGremsy_configuration] page0 use sector 0x%x\n", (int)page0Address);
+	printf("\n[storageFlash_styleGremsy_configuration] page1 use sector 0x%x\n", (int)page1Address);
+
+	switch(page0Status)
+	{
+		case GREMSY_STORAGE_FLASH_EMPTY:
+		{
+			printf("\n[storageFlash_styleGremsy_configuration] page0 is empty\n");
+
+			/// ktra page1
+			if(page1Status != GREMSY_STORAGE_FLASH_RECEIVER)
+			{
+				printf("\n[storageFlash_styleGremsy_configuration] page0 and page1 format\n");
+
+				/// dua flash ve mac dinh
+				status = storageFlash_format();
+			}
+			else
+			{
+				printf("\n[storageFlash_styleGremsy_configuration] page1 is reciever\n");
+			}
+		}break;
+		case GREMSY_STORAGE_FLASH_RECEIVER:
+		{
+			printf("\n[storageFlash_styleGremsy_configuration] page0 is reciever\n");
+
+			if(page1Status != GREMSY_STORAGE_FLASH_EMPTY)
+			{
+				printf("\n[storageFlash_styleGremsy_configuration] page1 erase and write empty\n");
+
+				if(storageFlash_EraseSector(page1Address, 0x20000) != 0)
+				{
+					printf("\n[storageFlash_styleGremsy_configuration] page1 erase fail\n");
+					return FLASH_STATUS_ER_PROGRAM;
+				}
+
+				/* Unlock the Flash to enable the flash control register access *************/
+				HAL_FLASH_Unlock();
+
+				if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, page1Address, GREMSY_STORAGE_FLASH_EMPTY) != HAL_OK)
+				{
+					printf("\n[storageFlash_format] write to page1 value empty fail ...\n");
+					return FLASH_STATUS_ER_PROGRAM;
+				}
+
+				/* Lock the Flash to disable the flash control register access (recommended
+				 to protect the FLASH memory against possible unwanted operation) *********/
+				HAL_FLASH_Lock();
+
+				status = FLASH_STATUS_COMPLETE;
+			}
+			else
+			{
+				printf("\n[storageFlash_styleGremsy_configuration] page1 is empty\n");
+			}
+		}break;
+		case GREMSY_STORAGE_FLASH_FULL:
+		{
+			printf("\n[storageFlash_styleGremsy_configuration] page0 is full\n");
+
+			if(page1Status == GREMSY_STORAGE_FLASH_RECEIVER)
+			{
+				printf("\n[storageFlash_styleGremsy_configuration] page0 erase and write empty\n");
+
+				if(storageFlash_EraseSector(page0Address, 0x20000) != 0)
+				{
+					return FLASH_STATUS_ER_PROGRAM;
+				}
+
+				/* Unlock the Flash to enable the flash control register access *************/
+				HAL_FLASH_Unlock();
+
+				if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, page0Address, GREMSY_STORAGE_FLASH_EMPTY) != HAL_OK)
+				{
+					printf("\n[storageFlash_format] write to page1 value empty fail ...\n");
+					return FLASH_STATUS_ER_PROGRAM;
+				}
+
+				/* Lock the Flash to disable the flash control register access (recommended
+				 to protect the FLASH memory against possible unwanted operation) *********/
+				HAL_FLASH_Lock();
+
+				status = FLASH_STATUS_COMPLETE;
+			}
+			else
+			{
+				printf("\n[storageFlash_styleGremsy_configuration] page0 and page1 format\n");
+
+				status = storageFlash_format();
+			}
+		}break;
+		default:
+		{
+			printf("\n[storageFlash_styleGremsy_configuration] page0 and is other\n");
+
+			printf("\n[storageFlash_styleGremsy_configuration] page0 and page1 format\n");
+
+			status = storageFlash_format();
+		}break;
+	}
+
+	/// a little delay wait for flash
+	HAL_Delay(100);
+
+	return status;
+}
+
+/** @brief  storageFlash_findPageFull
+    @return uint32_t page address
+*/
+static uint32_t storageFlash_findPageFull(void)
+{
+	uint32_t pageAddress = 0;
+
+	uint32_t page0Status = (*(uint32_t *)ADDR_FLASH_SECTOR_10);
+	uint32_t page1Status = (*(uint32_t *)ADDR_FLASH_SECTOR_11);
+
+    if(page0Status == GREMSY_STORAGE_FLASH_FULL)
+    {
+    	pageAddress = ADDR_FLASH_SECTOR_10;
+    }
+    else if(page1Status == GREMSY_STORAGE_FLASH_FULL)
+    {
+    	pageAddress = ADDR_FLASH_SECTOR_11;
+    }
+    else
+    {
+    	printf("\n[storageFlash_findPageFull] no find page full\n");
+    }
+
+	return pageAddress;
+}
+
+/** @brief  storageFlash_findPageEmpty
+    @return uint32_t page address
+*/
+static uint32_t storageFlash_findPageEmpty(void)
+{
+	uint32_t pageAddress = 0;
+
+	uint32_t page0Status = (*(uint32_t *)ADDR_FLASH_SECTOR_10);
+	uint32_t page1Status = (*(uint32_t *)ADDR_FLASH_SECTOR_11);
+
+    if(page0Status == GREMSY_STORAGE_FLASH_EMPTY)
+    {
+    	pageAddress = ADDR_FLASH_SECTOR_10;
+    }
+    else if(page1Status == GREMSY_STORAGE_FLASH_EMPTY)
+    {
+    	pageAddress = ADDR_FLASH_SECTOR_11;
+    }
+    else
+    {
+    	printf("\n[storageFlash_findPageEmpty] no find page empty\n");
+    }
+
+	return pageAddress;
+}
+
+/** @brief  storageFlash_findPageReciever
+    @return uint32_t page address
+*/
+static uint32_t storageFlash_findPageReciever(void)
+{
+	uint32_t pageAddress = 0;
+
+	uint32_t page0Status = (*(uint32_t *)ADDR_FLASH_SECTOR_10);
+	uint32_t page1Status = (*(uint32_t *)ADDR_FLASH_SECTOR_11);
+
+    if(page0Status == GREMSY_STORAGE_FLASH_RECEIVER)
+    {
+    	pageAddress = ADDR_FLASH_SECTOR_10;
+    }
+    else if(page1Status == GREMSY_STORAGE_FLASH_RECEIVER)
+    {
+    	pageAddress = ADDR_FLASH_SECTOR_11;
+    }
+    else
+    {
+    	printf("\n[storageFlash_findPageReciever] no find page reciever\n");
+    }
+
+	return pageAddress;
+}
+
+/** @brief  storageFlash_writeAndVerifyPageFull
+ *  @param[in] address (use style gremsy) of value write
+ *  @param[in] value : value write to flash
+    @return flashStatus_t
+*/
+static flashStatus_t storageFlash_writeAndVerifyPageFull(uint16_t address, uint16_t value)
+{
+	uint32_t startAddress = 0;
+	uint32_t endAddress = 0;
+	uint32_t runAddress = 0;
+
+	/// chuyen address (2 bytes) va value (2 bytes) thanh 4 byte
+	uint32_t valueFlash = (uint32_t)address << 16 | value;
+
+	/// tim page sang sang ghi du lieu
+	uint32_t pageAddress = storageFlash_findPageReciever();
+
+	startAddress = pageAddress;
+	endAddress = pageAddress + 128*KBYTE - 2;
+
+	/// dia chi bat dau ghi vao flash
+	runAddress = startAddress;
+
+	/// kiem tra cung nho trong
+	while(runAddress < endAddress)
+	{
+		if(*(__IO uint32_t*)runAddress == 0xffffffff)
+		{
+			/* Unlock the Flash to enable the flash control register access *************/
+			HAL_FLASH_Unlock();
+
+			if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, runAddress, valueFlash) == HAL_OK)
+			{
+				return FLASH_STATUS_COMPLETE;
+			}
+
+			/* Lock the Flash to disable the flash control register access (recommended
+			 to protect the FLASH memory against possible unwanted operation) *********/
+			HAL_FLASH_Lock();
+		}
+		else
+		{
+			runAddress += 4;
+		}
+	}
+
+	return FLASH_STATUS_ER_PROGRAM;
+}
+
+/** @brief  storageFlash_readPageFull
+ *  @param[in] address (use style gremsy) of value read
+ *  @param[in] *data : value read to flash
+    @return bool
+*/
+static bool storageFlash_readPageFull(uint16_t address, uint16_t *data)
+{
+	uint32_t pageFullAddress = 0;
+
+	uint32_t startAddress = 0;
+	uint32_t endAddress = 0;
+
+	uint32_t runAddress = 0;
+	uint16_t addressValue = 0xfffe;
+
+	pageFullAddress = storageFlash_findPageFull();
+	if(pageFullAddress == 0)
+	{
+		return false;
+	}
+
+	startAddress = pageFullAddress;
+	endAddress = startAddress + 128*KBYTE - 2;
+
+	/// lay dia chi bat dau doc
+	runAddress = endAddress;
+
+	/// doc du lieu
+	while(runAddress > (startAddress + 2))
+	{
+        /* Get the current location content to be compared with virtual address */
+		addressValue = (*(__IO uint16_t*)runAddress);
+
+        /* Compare the read address with the virtual address */
+        if(addressValue == address)
+        {
+            /* Get content of Address-2 which is variable value */
+            *data = (*(__IO uint16_t*)(runAddress - 2));
+
+            return true;
+        }
+        else
+        {
+        	runAddress = runAddress - 4;
+        }
+	}
+
+	return false;
+}
+
+/** @brief  storageFlash_styleGremsy_write
+    @return bool
+*/
+static flashStatus_t storageFlash_tranferData(uint16_t address, uint16_t value)
+{
+	uint32_t addressEmpty = 0;
+	uint32_t addressReciever = 0;
+
+	uint32_t pageEmpty = storageFlash_findPageEmpty();
+	if(pageEmpty == ADDR_FLASH_SECTOR_10)
+	{
+		addressEmpty 	= ADDR_FLASH_SECTOR_10;
+		addressReciever = ADDR_FLASH_SECTOR_11;
+	}
+	else if(pageEmpty == ADDR_FLASH_SECTOR_11)
+	{
+		addressEmpty 	= ADDR_FLASH_SECTOR_11;
+		addressReciever = ADDR_FLASH_SECTOR_10;
+	}
+	else
+	{
+		return FLASH_STATUS_ER_OPERATION;
+	}
+
+	/* Unlock the Flash to enable the flash control register access *************/
+	HAL_FLASH_Unlock();
+
+	/// write header data switch page empty to page reciver
+	if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addressEmpty, GREMSY_STORAGE_FLASH_RECEIVER) != HAL_OK)
+	{
+		return FLASH_STATUS_ER_PROGRAM;
+		printf("\n[storageFlash_tranferData] write hearder flash switch lage empty to reciever fail\n");
+	}
+
+//	/* Lock the Flash to disable the flash control register access (recommended
+//	 to protect the FLASH memory against possible unwanted operation) *********/
+//	HAL_FLASH_Lock();
+//
+//	/* Unlock the Flash to enable the flash control register access *************/
+//	HAL_FLASH_Unlock();
+
+	/// write header data switch page reciever to page full
+	if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addressReciever, GREMSY_STORAGE_FLASH_FULL) != HAL_OK)
+	{
+		return FLASH_STATUS_ER_PROGRAM;
+		printf("\n[storageFlash_tranferData] write hearder flash switch lage reciever to full fail\n");
+	}
+
+	/* Lock the Flash to disable the flash control register access (recommended
+	 to protect the FLASH memory against possible unwanted operation) *********/
+	HAL_FLASH_Lock();
+
+	/// write value vao page reciever moi duoc chuyen
+	flashStatus_t status = storageFlash_writeAndVerifyPageFull(address, value);
+	if(status != FLASH_STATUS_COMPLETE)
+	{
+		printf("\n[storageFlash_tranferData] write value to reciever fail\n");
+		return FLASH_STATUS_ER_PROGRAM;
+	}
+
+    /* Transfer process: transfer variables from old to the new active page */
+    for (int i = 0; i < GREMSY_STORAGE_PARAM_NUM; i++)
+    {
+        if (i != address)  /* Check each variable except the one passed as parameter */
+        {
+            uint16_t dataVar;
+
+            /* Read the other last variable updates */
+            bool readResult = storageFlash_readPageFull(i, &dataVar);
+
+            /* In case variable corresponding to the virtual address was found */
+            if (readResult == true)
+            {
+                /* Transfer the variable to the new active page */
+                flashStatus_t status = storageFlash_writeAndVerifyPageFull(i, dataVar);
+
+                /* If program operation was failed, a Flash error code is returned */
+                if (status != FLASH_STATUS_COMPLETE)
+                {
+                	printf("\n[storageFlash_tranferData] write value to reciever fail\n");
+                    return FLASH_STATUS_ER_PROGRAM;
+                }
+            }
+        }
+    }
+
+	return FLASH_STATUS_COMPLETE;
+}
+
+/** @brief  storageFlash_styleGremsy_write
+    @return bool
+*/
+flashStatus_t storageFlash_styleGremsy_write(uint16_t address, uint16_t value)
+{
+	flashStatus_t status = FLASH_STATUS_COMPLETE;
+
+	status = storageFlash_writeAndVerifyPageFull(address, value);
+	if(status == FLASH_STATUS_ER_PROGRAM)
+	{
+		/// chuyen flash page
+		status= storageFlash_tranferData(address, value);
+	}
+
+	return status;
+}
+
+/** @brief  storageFlash_styleGremsy_read
+    @return bool
+*/
+bool storageFlash_styleGremsy_read(uint16_t address, uint16_t *data)
+{
+	uint32_t pageFullAddress = 0;
+
+	uint32_t startAddress = 0;
+	uint32_t endAddress = 0;
+
+	uint32_t runAddress = 0;
+	uint16_t addressValue = 0xfffe;
+
+	pageFullAddress = storageFlash_findPageReciever();
+	if(pageFullAddress == 0)
+	{
+		return false;
+	}
+
+	startAddress = pageFullAddress;
+	endAddress = startAddress + 128*KBYTE - 2;
+
+	/// lay dia chi bat dau doc
+	runAddress = endAddress;
+
+	/// doc du lieu
+	while(runAddress > (startAddress + 2))
+	{
+        /* Get the current location content to be compared with virtual address */
+		addressValue = (*(__IO uint16_t*)runAddress);
+
+        /* Compare the read address with the virtual address */
+        if(addressValue == address)
+        {
+            /* Get content of Address-2 which is variable value */
+            *data = (*(__IO uint16_t*)(runAddress - 2));
+
+            return true;
+        }
+        else
+        {
+        	runAddress = runAddress - 4;
+        }
+	}
+
+	return false;
 }
 
 #endif

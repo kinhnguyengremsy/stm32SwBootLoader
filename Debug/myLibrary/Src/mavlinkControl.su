@@ -1,4 +1,4 @@
-mavlinkControl.c:41:6:mavlinhControlConfiguration	8	static
-mavlinkControl.c:59:13:mavlinkControlSendHeartBeart	16	static
-mavlinkControl.c:68:8:mavlinkControlSendCmdJumTaget	16	static
-mavlinkControl.c:85:6:mavlinkControl_process	8	static
+mavlinkControl.c:45:6:mavlinhControlConfiguration	8	static
+mavlinkControl.c:70:13:mavlinkControlSendHeartBeart	16	static
+mavlinkControl.c:79:13:mavlinkControlSendCmdJumTaget	16	static
+mavlinkControl.c:96:6:mavlinkControl_process	16	static

@@ -77,6 +77,25 @@ typedef struct _mavlink_log_request_end_t
 
 }mavlink_msg_log_request_end_t;
 
+typedef struct _mavlink_msg_mount_orientation_t
+{
+ uint32_t time_boot_ms; /*< [ms] Timestamp (time since system boot).*/
+ float roll; /*< [deg] Roll in global frame (set to NaN for invalid).*/
+ float pitch; /*< [deg] Pitch in global frame (set to NaN for invalid).*/
+ float yaw; /*< [deg] Yaw relative to vehicle(set to NaN for invalid).*/
+ float yaw_absolute; /*< [deg] Yaw in absolute frame, North is 0 (set to NaN for invalid).*/
+}mavlink_msg_mount_orientation_t;
+
+typedef struct mavlink_msg_command_ack_t
+{
+ uint16_t command; /*<  Command ID (of acknowledged command).*/
+ uint8_t result; /*<  Result of command.*/
+ uint8_t progress; /*<  WIP: Also used as result_param1, it can be set with a enum containing the errors reasons of why the command was denied or the progress percentage or 255 if unknown the progress when result is MAV_RESULT_IN_PROGRESS.*/
+ int32_t result_param2; /*<  WIP: Additional parameter of the result, example: which parameter of MAV_CMD_NAV_WAYPOINT caused it to be denied.*/
+ uint8_t target_system; /*<  WIP: System which requested the command to be executed*/
+ uint8_t target_component; /*<  WIP: Component which requested the command to be executed*/
+}mavlink_msg_command_ack_t;
+
 typedef struct __mavlinkMsg_t
 {
     uint8_t         vehicle_system_id;
@@ -93,6 +112,12 @@ typedef struct __mavlinkMsg_t
 
 	/// log request end
 	mavlink_msg_log_request_end_t logRequestEnd;
+
+	/// mount orientation
+	mavlink_msg_mount_orientation_t mount_orientation;
+
+	/// command ack
+	mavlink_msg_command_ack_t command_ack;
 
 }mavlinkMsgHandle_t;
 /* Exported constants --------------------------------------------------------*/
@@ -157,6 +182,11 @@ void mavlinkMsg_send_logRequestData(uint32_t offset, uint32_t count, uint16_t id
     @return none
 */
 void mavlinkMsg_send_logRequestEnd(uint8_t channel);
+
+/** @brief  mavlinkMsg_readData
+    @return none
+*/
+void mavlinkMsg_readData(void);
 
 #endif /* __MAVLINKMSGHANDLE_H */
 

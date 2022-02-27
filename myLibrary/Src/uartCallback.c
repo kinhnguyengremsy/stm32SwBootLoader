@@ -48,6 +48,7 @@
 	extern UART_HandleTypeDef 	huart2;
 #endif
 #if (USE_DEVICE_BOOTLOADER == 1)
+	extern UART_HandleTypeDef 	huart2;
 	extern ringBuffer_t 		rBufferRxU2;
 	extern uint8_t 				usart2WData;
 	bool txComplete;
@@ -66,6 +67,7 @@
 	extern UART_HandleTypeDef 	huart1;
 	extern ringBuffer_t 		rBufferRxU1;
 	extern uint8_t 				usart1WData;
+	extern bool 				endCmd;
 #endif
 
 
@@ -162,6 +164,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		if(huart->Instance == huart1.Instance)
 		{
 			ringBufferWrite(&rBufferRxU1, usart1WData);
+
+			if(usart1WData == '\n')
+			{
+				endCmd = true;
+			}
 		}
 	#endif
 }
