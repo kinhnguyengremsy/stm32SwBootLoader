@@ -23,25 +23,52 @@
 /* Includes------------------------------------------------------------------------------*/
 #include "hostUartBootLoader.h"
 #if (USE_HOST_BOOTLOADER == 1)
-#include "uartBootLoader.h"
-#include "serialPort.h"
 #include "ringBuffer.h"
+#include "mavlinkControl.h"
+#include "uartCLI.h"
+#include "uartBootLoader.h"
+/* Private define------------------------------------------------------------------------------*/
+#define STM32_MAX_FRAME  		256	/* cmd read memory */
+#define STM32_MAX_TX_FRAME  	(1 + STM32_MAX_FRAME + 1)	/* cmd write memory */
+
+#define STM32_MAX_PAGES     	0x0000ffff
+#define STM32_MASS_ERASE    	0x00100000 /* > 2 x max_pages */
 /* Private typedef------------------------------------------------------------------------------*/
+
+struct _bootLoaderCmdList
+{
+	uint8_t cmdHeader;
+	uint8_t cmdFooter;
+}bootLoaderCmdList[BOOTLOADER_CMD_GET_TOTAL] = {
+		{.cmdHeader = UART_BOOTLOADER_CMD_CONNECT			, .cmdFooter = 0x00},
+		{.cmdHeader = UART_BOOTLOADER_CMD_GET				, .cmdFooter = UART_BOOTLOADER_CMD_GET 		^ 0xff},
+		{.cmdHeader = UART_BOOTLOADER_CMD_GET_VER			, .cmdFooter = UART_BOOTLOADER_CMD_GET_VER 	^ 0xff},
+		{.cmdHeader = UART_BOOTLOADER_CMD_GET_ID			, .cmdFooter = UART_BOOTLOADER_CMD_GET_ID 	^ 0xff},
+		{.cmdHeader = UART_BOOTLOADER_CMD_READ_MEMORY		, .cmdFooter = 0xEE},
+		{.cmdHeader = UART_BOOTLOADER_CMD_GO				, .cmdFooter = 0xDE},
+		{.cmdHeader = UART_BOOTLOADER_CMD_WRITE_MEMORY		, .cmdFooter = 0xCE},
+		{.cmdHeader = UART_BOOTLOADER_CMD_ERASE				, .cmdFooter = UART_BOOTLOADER_CMD_ERASE 	^ 0xff},
+		{.cmdHeader = UART_BOOTLOADER_CMD_WRITE_PROTECT		, .cmdFooter = 0x9C},
+		{.cmdHeader = UART_BOOTLOADER_CMD_WRITE_UNPROTECT	, .cmdFooter = 0x8C},
+		{.cmdHeader = UART_BOOTLOADER_CMD_READ_PROTECT		, .cmdFooter = 0x7D},
+		{.cmdHeader = UART_BOOTLOADER_CMD_READ_UNPROTECT	, .cmdFooter = 0x6D},
+//		{.cmdHeader = UART_BOOTLOADER_CMD_GET_CHECKSUM		, .cmdFooter = 0x5E},
+};
+
 typedef struct
 {
-	bootLoaderState_t state;
-	uartBootLoader_t  boot;
-}hostBootLoader_private_t;
-/* Private define------------------------------------------------------------------------------*/
+	bootLoaderGetCmd_t cmdGet;
+	bootLoaderGetIdCmd_t cmdGetId;
+
+}hostBootLoaderPrivate_t;
 /* Private macro------------------------------------------------------------------------------*/
 /* Private variables------------------------------------------------------------------------------*/
-extern serialPort_t 		serial_port4;
-extern UART_HandleTypeDef 	huart4;
-extern DMA_HandleTypeDef 	hdma_uart4_rx;
-
-hostBootLoader_private_t 	hBootLoader;
-ringBuffer_t 				rBufferRxU4;
-uint8_t wData;
+extern bool txComplete;
+ringBuffer_t 						rBufferHostBL;
+uint8_t 							wData;
+static hostBootLoader_t				*host;
+static UART_HandleTypeDef 			*uart_hostBL;
+hostBootLoaderPrivate_t				hostPri;
 /* Private function prototypes------------------------------------------------------------------------------*/
 /* Private functions------------------------------------------------------------------------------*/
 
@@ -52,21 +79,40 @@ uint8_t wData;
 /** @brief  hostUartBootLoaderConfiguration
     @return none
 */
-void hostUartBootLoaderConfiguration(void)
+void hostUartBootLoaderConfiguration(hostBootLoader_t *_host, UART_HandleTypeDef *huart)
 {
-    /// init serialPort library
-    serial_port4.zPrivate.uartHandle.hdmarx = &hdma_uart4_rx;
-    serial_port4.zPrivate.uartHandle.Instance = UART4;
-    serial_port4.isWriteFinish = true;
+	printf("\n[hostUartBootLoaderConfiguration] use mavlink + hw host boot loader + uart cli ...\n");
+	host = _host;
+	uart_hostBL = huart;
+//	mavlinhControlConfiguration();
 
-	ringBufferInit(&rBufferRxU4);
-
-	if(HAL_UART_Receive_DMA(&huart4, &wData, 1) != HAL_OK)
-	{
-		Error_Handler();
-	}
+	/// debug
+//	host->isBootLoader = true;
 }
 
+/** @brief  __hostBL
+    @return pointer struct support host boot loader
+*/
+hostBootLoader_t* __hostBL(void)
+{
+	return host;
+}
+
+
+/** @brief  getTime
+    @return bool
+*/
+static bool getTime(uint32_t *time, uint32_t timeCmp)
+{
+	if(HAL_GetTick() - *time > timeCmp || *time == 0)
+	{
+		*time = HAL_GetTick();
+
+		return true;
+	}
+
+	return false;
+}
 
 #endif
 /**
@@ -77,430 +123,248 @@ void hostUartBootLoaderConfiguration(void)
     @{
 */#ifndef __HOST_UART_BOOTLOADER_FUNCTION
 #define __HOST_UART_BOOTLOADER_FUNCTION
-
-
-/** @brief  hostBootLoader_sendCmdConnect
-    @return bool
+/** @brief  hostBootLoader_uartConfigForBL
+    @return none
 */
-static void hostBootLoader_sendCmdConnect(void)
+static void hostBootLoader_uartConfigForBL(void)
 {
-	uint8_t buffer[2] = {UART_BOOTLOADER_CMD_CONNECT, 0};
+	HAL_UART_DeInit(uart_hostBL);
 
-	serialPort_write(&serial_port4, buffer, 1);
+	HAL_Delay(500);
+
+	uart_hostBL->Instance 					= USART2;
+	uart_hostBL->Init.BaudRate 				= 115200;//460800 ;
+	uart_hostBL->Init.WordLength 			= UART_WORDLENGTH_9B;
+	uart_hostBL->Init.StopBits 				= UART_STOPBITS_1;
+	uart_hostBL->Init.Parity 				= UART_PARITY_EVEN;
+	uart_hostBL->Init.Mode 					= UART_MODE_TX_RX;
+	uart_hostBL->Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
+	uart_hostBL->Init.OverSampling 			= UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(uart_hostBL) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
+	HAL_Delay(500);
+
+	ringBufferInit(&rBufferHostBL);
+
+	if(HAL_UART_Receive_IT(uart_hostBL, &wData, 1) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
+    /// xoa bo dem uart truoc khi truyen
+    __HAL_UART_FLUSH_DRREGISTER(uart_hostBL);
 }
 
-/** @brief  hostBootLoaderCmdConnect
-    @return bool
+/** @brief  hostBootLoader_sendData
+    @return number of command
 */
-static bool hostBootLoaderCmdConnect(void)
+static void hostBootLoader_sendData(uint8_t *buffer, uint16_t len)
+{
+	HAL_UART_Transmit_IT(uart_hostBL, buffer, len);
+	while(txComplete == false);
+	txComplete = false;
+}
+
+/** @brief  hostBootLoader_getCmdHeader
+    @return number of command header
+*/
+static uint8_t hostBootLoader_getCmdHeader(uint8_t cmdIndex)
+{
+	return (bootLoaderCmdList[cmdIndex].cmdHeader);
+}
+
+/** @brief  hostBootLoader_getCmdFooter
+    @return number of command footer
+*/
+static uint8_t hostBootLoader_getCmdFooter(uint8_t cmdIndex)
+{
+	return (bootLoaderCmdList[cmdIndex].cmdFooter);
+}
+
+/** @brief  hostBootLoader_readCommand
+    @return number of command
+*/
+static void hostBootLoader_sendCommand(uint8_t cmdIndex)
+{
+	host->isSendCmd = true;
+	/// get cmd header
+	host->hostCmd[0] = hostBootLoader_getCmdHeader(cmdIndex);
+
+	/// get cmd footer
+	host->hostCmd[1] = hostBootLoader_getCmdFooter(cmdIndex);
+
+	printf("\n[hostBootLoader_sendCommand] 0x%x | 0x%x\n", host->hostCmd[0], host->hostCmd[1]);
+}
+
+/** @brief  hoatBootLoader_waittingResponeCmdConnect
+    @return number of command
+*/
+static bool hoatBootLoader_waittingResponeCmdConnect(void)
 {
 	uint8_t rData = 0;
-	static uint32_t timePrintDebug = 0;
-	static uint32_t timeSendCmd	= 0;
 
-	if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
+	if(rBufferHostBL.len >= 1)
 	{
-		if(rBufferRxU4.head == 1)
+		if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
 		{
 			if(rData == UART_BOOTLOADER_ACK)
 			{
-				timePrintDebug = 0;
-				timeSendCmd	= 0;
-				printf("\n[hostBootLoaderCmdConnect] boot connected !@! len = %d\n", rBufferRxU4.len);
+				printf("\n[hoatBootLoader_waittingResponeCmdConnect] device connected !@!\n");
 				return true;
 			}
-			else
-			{
-				printf("\n[hostBootLoaderCmdConnect] reciever nack byte len = %d\n", rBufferRxU4.len);
-			}
-		}
-	}
-	else
-	{
-		if(HAL_GetTick() - timeSendCmd > 1000)
-		{
-			timeSendCmd = HAL_GetTick();
-
-			hostBootLoader_sendCmdConnect();
-			printf("\n[hostBootLoaderCmdConnect] send cmd connect ...\n");
-		}
-	}
-
-	if(HAL_GetTick() - timePrintDebug > 1000)
-	{
-		timePrintDebug = HAL_GetTick();
-		printf("\n[hostBootLoaderCmdConnect] waitting ack cmd ...\n");
-	}
-
-	return false;
-}
-
-/** @brief  hostBootLoader_sendCmdGet
-    @return bool
-*/
-static bool hostBootLoader_sendCmdGet(bootLoaderGetCmd_t *cmd)
-{
-	uint8_t rData = 0;
-	uint8_t cmdGetBuff[BOOTLOADER_CMD_LEN] = {0x00, 0xFF};
-	uint8_t cmdGetRBuff[BOOTLOADER_CMD_GET_LEN];
-	static uint32_t timeSendCmdGet = 0;
-
-	memset(cmdGetRBuff, 0, BOOTLOADER_CMD_GET_LEN);
-
-	/// cho nhan du 15 byte cmd get {ack, numberOfbyte, version, support cmd byte ...}
-	if(rBufferRxU4.len == BOOTLOADER_CMD_GET_LEN)
-	{
-		if(ringBufferRead(&rBufferRxU4, &rData))
-		{
-			if(rData == UART_BOOTLOADER_ACK)
-			{
-				printf("\n[hostBootLoader_sendCmdGet] reciever cmd ack\n");
-				for(uint8_t i = 0; i < BOOTLOADER_CMD_GET_LEN; i++)
-				{
-					if(ringBufferRead(&rBufferRxU4, &rData))
-					{
-						cmdGetRBuff[i] = rData;
-						printf("\n[hostBootLoader_sendCmdGet] reciever data cmd get value = 0x%x | len = %d\n", rData, rBufferRxU4.len);
-					}
-				}
-
-				cmd->numberOfbyte 			= cmdGetRBuff[0];
-				cmd->version 				= cmdGetRBuff[1];
-				cmd->getCmd 				= cmdGetRBuff[2];
-				cmd->getVerAndRPStatus 		= cmdGetRBuff[3];
-				cmd->getId 					= cmdGetRBuff[4];
-				cmd->readMemoryCmd 			= cmdGetRBuff[5];
-				cmd->goCmd 					= cmdGetRBuff[6];
-				cmd->writeMemoryCmd 		= cmdGetRBuff[7];
-				cmd->EraseCmd 				= cmdGetRBuff[8]; /*Erase command or Extended Erase command (exclusive commands)*/
-				cmd->writeProtectCmd 		= cmdGetRBuff[9];
-				cmd->writeUnProtectCmd 		= cmdGetRBuff[10];
-				cmd->readOutProtectCmd 		= cmdGetRBuff[11];
-				cmd->readOutUnProtectCmd 	= cmdGetRBuff[12];
-				cmd->getChecksumCmd 		= cmdGetRBuff[13];
-
-				return true;
-			}
-		}
-	}
-	else
-	{
-		if(HAL_GetTick() - timeSendCmdGet > 1000 || timeSendCmdGet == 0)
-		{
-			timeSendCmdGet = HAL_GetTick();
-
-			printf("\n[hostBootLoader_sendCmdGet] send cmd get ...\n");
-
-			serialPort_write(&serial_port4, cmdGetBuff, 2);
 		}
 	}
 
 	return false;
 }
 
-/** @brief  hostBootLoader_sendCmdGetVer
-    @return bool
+/** @brief  hoatBootLoader_waittingResponeCmdGet
+    @return number of command
 */
-static bool hostBootLoader_sendCmdGetVer(bootLoaderGetVerCmd_t *cmd)
+static bool hoatBootLoader_waittingResponeCmdGet(void)
 {
 	uint8_t rData = 0;
-	uint8_t cmdGetVerBuff[BOOTLOADER_CMD_LEN] = {0x01, 0xFE};
-	uint8_t cmdGetRBuff[BOOTLOADER_CMD_GET_VER_LEN];
-	static uint32_t timeSendCmdGet = 0;
+	uint8_t buffer[BOOTLOADER_CMD_GET_LEN];
 
-	if(rBufferRxU4.len == BOOTLOADER_CMD_GET_VER_LEN)
+	if(rBufferHostBL.len >= BOOTLOADER_CMD_GET_LEN)
 	{
-		if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
+		for(uint8_t i = 0; i < BOOTLOADER_CMD_GET_LEN; i++)
 		{
-			/// kiem tra ack
-			if(rData == UART_BOOTLOADER_ACK)
+			if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
 			{
-				printf("\n[hostBootLoader_sendCmdGetVer] reciever cmd ack\n");
-				for(uint8_t i = 0; i < BOOTLOADER_CMD_GET_VER_LEN; i++)
-				{
-					if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
-					{
-						cmdGetRBuff[i] = rData;
-						printf("\n[hostBootLoader_sendCmdGetVer] reciever data cmd get ver value = 0x%x | len = %d\n", rData, rBufferRxU4.len);
-					}
-				}
-
-				cmd->version 	= cmdGetRBuff[0];
-				cmd->optionByte1 = cmdGetRBuff[1];
-				cmd->optionByte2 = cmdGetRBuff[2];
-
-				return true;
+				buffer[i] = rData;
 			}
 		}
-	}
-	else
-	{
-		if(HAL_GetTick() - timeSendCmdGet > 1000 || timeSendCmdGet == 0)
+
+		/// kiem tra ack
+		if(buffer[0] == UART_BOOTLOADER_ACK && buffer[14] == UART_BOOTLOADER_ACK)
 		{
-			timeSendCmdGet = HAL_GetTick();
+			hostPri.cmdGet.numberOfbyte 			= buffer[1];
+			hostPri.cmdGet.version 					= buffer[2];
+			hostPri.cmdGet.getCmd 					= buffer[3];
+			hostPri.cmdGet.getVerAndRPStatus 		= buffer[4];
+			hostPri.cmdGet.getId 					= buffer[5];
+			hostPri.cmdGet.readMemoryCmd 			= buffer[6];
+			hostPri.cmdGet.goCmd 					= buffer[7];
+			hostPri.cmdGet.writeMemoryCmd 			= buffer[8];
+			hostPri.cmdGet.EraseCmd 				= buffer[9];
+			hostPri.cmdGet.writeProtectCmd 			= buffer[10];
+			hostPri.cmdGet.writeUnProtectCmd 		= buffer[11];
+			hostPri.cmdGet.readOutProtectCmd 		= buffer[12];
+			hostPri.cmdGet.readOutUnProtectCmd 		= buffer[13];
 
-			printf("\n[hostBootLoader_sendCmdGetVer] send cmd get ver ...\n");
-
-			serialPort_write(&serial_port4, cmdGetVerBuff, 2);
+			return true;
 		}
 	}
 
 	return false;
 }
 
-/** @brief  hostBootLoader_sendCmdGetId
-    @return bool
+/** @brief  hoatBootLoader_waittingResponeCmdGetId
+    @return number of command
 */
-static bool hostBootLoader_sendCmdGetId(bootLoaderGetIdCmd_t *cmd)
+static bool hoatBootLoader_waittingResponeCmdGetId(void)
 {
 	uint8_t rData = 0;
-	uint8_t cmdGetIdBuff[BOOTLOADER_CMD_LEN] = {0x02, 0xFD};
-	uint8_t cmdGetRBuff[BOOTLOADER_CMD_GET_ID_LEN];
-	static uint32_t timeSendCmdGet = 0;
+	uint8_t buffer[BOOTLOADER_CMD_GET_ID_LEN];
 
-	if(rBufferRxU4.len == BOOTLOADER_CMD_GET_ID_LEN)
+	if(rBufferHostBL.len >= BOOTLOADER_CMD_GET_ID_LEN)
 	{
-		if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
+		for(uint8_t i = 0; i < BOOTLOADER_CMD_GET_ID_LEN; i++)
 		{
-			/// kiem tra ack
-			if(rData == UART_BOOTLOADER_ACK)
-			{
-				printf("\n[hostBootLoader_sendCmdGetId] reciever cmd ack\n");
-				for(uint8_t i = 0; i < BOOTLOADER_CMD_GET_ID_LEN; i++)
-				{
-					if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
-					{
-						cmdGetRBuff[i] = rData;
-						printf("\n[hostBootLoader_sendCmdGetId] reciever data cmd get id value = 0x%x | len = %d\n", rData, rBufferRxU4.len);
-					}
-				}
-
-				cmd->numberOfbyte 	= cmdGetRBuff[0];
-				cmd->byte3 = cmdGetRBuff[1];
-				cmd->byte4 = cmdGetRBuff[2];
-
-				cmd->PID = cmd->byte3 | cmd->byte4 << 8;
-
-				return true;
-			}
+			if(ringBufferRead(&rBufferHostBL, &rData))
+			buffer[i] = rData;
 		}
-	}
-	else
-	{
-		if(HAL_GetTick() - timeSendCmdGet > 1000 || timeSendCmdGet == 0)
+
+		if(buffer[0] == UART_BOOTLOADER_ACK && buffer[4] == UART_BOOTLOADER_ACK)
 		{
-			timeSendCmdGet = HAL_GetTick();
+			hostPri.cmdGetId.numberOfbyte = buffer[1];
+			hostPri.cmdGetId.byte3 = buffer[2];
+			hostPri.cmdGetId.byte4 = buffer[3];
+			hostPri.cmdGetId.PID = hostPri.cmdGetId.byte3 << 8 | hostPri.cmdGetId.byte4;
 
-			printf("\n[hostBootLoader_sendCmdGetId] send cmd get id ...\n");
+			printf("\n[hoatBootLoader_waittingResponeCmdGetId] chipId : 0x%x\n", hostPri.cmdGetId.PID);
 
-			serialPort_write(&serial_port4, cmdGetIdBuff, 2);
+			return true;
 		}
 	}
 
 	return false;
 }
 
-/** @brief  hostBootLoader_sendCmdErase
-    @return bool
+/** @brief  hostBootLoader_readCommand
+    @return number of command
 */
-static bool hostBootLoader_sendCmdErase(void)
+static hostBootLoaderState_t hostBootLoader_readCommand(void)
 {
-	uint8_t rData = 0;
-	uint8_t cmdEraseBuff[BOOTLOADER_CMD_LEN] = {0x43, 0xBC};
-	static uint32_t timeSendCmdGet = 0;
-
-	if(rBufferRxU4.len == BOOTLOADER_CMD_ERASE_LEN)
+	static hostBootLoaderState_t state = HOST_BOOTLOADER_STATE_IDLE;
+	if(host->isSendCmd == true)
 	{
-		if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
-		{
-			/// kiem tra ack
-			if(rData == UART_BOOTLOADER_ACK)
-			{
-				printf("\n[hostBootLoader_sendCmdErase] reciever cmd ack\n");
+		host->isSendCmd = false;
 
-				return true;
-			}
+		if(host->state == HOST_BOOTLOADER_STATE_IDLE)
+		{
+			uint8_t data = UART_BOOTLOADER_CMD_CONNECT;
+			hostBootLoader_sendData(&data, 1);
 		}
+		else
+		{
+			hostBootLoader_sendData(host->hostCmd, 2);
+		}
+
 	}
 	else
 	{
-		if(HAL_GetTick() - timeSendCmdGet > 3000 || timeSendCmdGet == 0)
+		switch(host->hostCmd[0])
 		{
-			timeSendCmdGet = HAL_GetTick();
+			case UART_BOOTLOADER_CMD_CONNECT:
+			{
+				if(hoatBootLoader_waittingResponeCmdConnect() == true)
+				{
+					state = HOST_BOOTLOADER_STATE_CONNECTED;
+				}
+			}break;
+			case UART_BOOTLOADER_CMD_GET:
+			{
+				if(hoatBootLoader_waittingResponeCmdGet() == true)
+				{
+					state = HOST_BOOTLOADER_STATE_CMD_GET;
+				}
+			}break;
+			case UART_BOOTLOADER_CMD_GET_VER:
+			{
 
-			printf("\n[hostBootLoader_sendCmdErase] send cmd erase ...\n");
+			}break;
+			case UART_BOOTLOADER_CMD_GET_ID:
+			{
+				if(hoatBootLoader_waittingResponeCmdGetId() == true)
+				{
+					state = HOST_BOOTLOADER_STATE_GET_ID;
+				}
+			}break;
+			case UART_BOOTLOADER_CMD_READ_MEMORY:
+			{
 
-			serialPort_write(&serial_port4, cmdEraseBuff, 2);
+			}break;
+			case UART_BOOTLOADER_CMD_GO:
+			{
+
+			}break;
+			case UART_BOOTLOADER_CMD_WRITE_MEMORY:
+			{
+
+			}break;
+			case UART_BOOTLOADER_CMD_ERASE:
+			{
+
+			}break;
 		}
 	}
 
-	return false;
-}
-
-/** @brief  hostBootLoader_sendCmdWriteMem
-    @return bool
-*/
-static bootLoaderCmdWriteResult_t hostBootLoader_sendCmdWriteMem(void)
-{
-	uint8_t rData = 0;
-	uint8_t cmdWriteMemBuff[BOOTLOADER_CMD_LEN] = {0x31, 0xCe};
-	static uint32_t timeSendCmdGet = 0;
-	static uint8_t cmdWriteState = 0;
-	static uint32_t startAddress = 0x08020000;
-	uint32_t maxLen = 0x267c;
-	uint32_t endAddress = startAddress + maxLen;
-	static bool firstSendCmd = false;
-
-	switch(cmdWriteState)
-	{
-		case 0: /// send cmd write watting 1 byte ack
-		{
-
-			if(firstSendCmd == false)
-			{
-				firstSendCmd = true;
-			}
-			else
-			{
-				startAddress |= 256;
-			}
-
-			if(rBufferRxU4.len == 1)
-			{
-				if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
-				{
-					/// kiem tra ack
-					if(rData == UART_BOOTLOADER_ACK)
-					{
-						printf("\n[hostBootLoader_sendCmdWriteMem] reciever cmd ack\n");
-
-						cmdWriteState = 1;
-					}
-					else
-					{
-						return BOOTLOADER_CMD_WRITE_RESULT_ERROR;
-						printf("\n[hostBootLoader_sendCmdWriteMem] reciever cmd nack\n");
-					}
-				}
-			}
-			else
-			{
-				if(HAL_GetTick() - timeSendCmdGet > 1000 || timeSendCmdGet == 0)
-				{
-					timeSendCmdGet = HAL_GetTick();
-
-					printf("\n[hostBootLoader_sendCmdWriteMem] send cmd write 1 ...\n");
-
-					serialPort_write(&serial_port4, cmdWriteMemBuff, 2);
-				}
-			}
-		}break;
-		case 1: /// send 4 byte address and 1 byte checksum
-		{
-			uint8_t addressBuffer[5];
-
-			addressBuffer[0] = startAddress;
-			addressBuffer[1] = startAddress >> 8;
-			addressBuffer[2] = startAddress >> 16;
-			addressBuffer[3] = startAddress >> 24;
-
-			uint8_t checksum = uartBootLoaderChecksumCalculator(0, addressBuffer, 4);
-
-			printf("\n[hostBootLoader_sendCmdWriteMem] address = 0x%x \n byte1 = 0x%x | byte2 = 0x%x | byte3 = 0x%x | byte4 = 0x%x | checksum = 0x%x\n"
-					, (int)startAddress, (int)addressBuffer[0], (int)addressBuffer[1], (int)addressBuffer[2], (int)addressBuffer[3], (int)checksum);
-
-			addressBuffer[4] = checksum;
-
-			serialPort_write(&serial_port4, addressBuffer, 5);
-
-			cmdWriteState = 2;
-		}break;
-		case 2:
-		{
-			/// ktra ack
-			if(rBufferRxU4.len == 1)
-			{
-				if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
-				{
-					if(rData == UART_BOOTLOADER_ACK)
-					{
-						printf("\n[hostBootLoader_sendCmdWriteMem] reciever cmd ack\n");
-
-						cmdWriteState = 3;
-					}
-					else
-					{
-						return BOOTLOADER_CMD_WRITE_RESULT_ERROR;
-						printf("\n[hostBootLoader_sendCmdWriteMem] reciever cmd nack\n");
-					}
-				}
-			}
-		}break;
-		case 3:
-		{
-			uint8_t payloadBuffer[129];
-
-//			payloadBuffer = calloc(129, sizeof(uint8_t));
-
-			payloadBuffer[0] = 127;
-
-			/// create dummy data
-			for(uint16_t i = 1; i < 129; i++)
-			{
-				payloadBuffer[i] = i;
-			}
-
-			uint8_t checksum = uartBootLoaderChecksumCalculator(payloadBuffer[0], payloadBuffer, 127);
-
-			printf("\n[hostBootLoader_sendCmdWriteMem] checksum = 0x%x\n", (int)checksum);
-
-			payloadBuffer[128] = checksum;
-
-//			serialPort_write(&serial_port4, payloadBuffer, 100);
-//			serialPort_write(&serial_port4, payloadBuffer + 100, 100);
-//			serialPort_write(&serial_port4, payloadBuffer + 200, 58);
-			HAL_UART_Transmit_DMA(&huart4, payloadBuffer, 129);
-
-			cmdWriteState = 4;
-
-//			free(payloadBuffer);
-		}break;
-		case 4:
-		{
-			/// ktra ack
-			if(rBufferRxU4.len == 1)
-			{
-				if(ringBufferRead(&rBufferRxU4, &rData) == RING_BUFFER_OK)
-				{
-					if(rData == UART_BOOTLOADER_ACK)
-					{
-						printf("\n[hostBootLoader_sendCmdWriteMem] reciever cmd ack\n");
-
-						cmdWriteState = 5;
-					}
-					else
-					{
-						return BOOTLOADER_CMD_WRITE_RESULT_ERROR;
-						printf("\n[hostBootLoader_sendCmdWriteMem] reciever cmd nack\n");
-					}
-				}
-			}
-		}break;
-		case 5:
-		{
-			if(startAddress < endAddress)
-			{
-				cmdWriteState = 0;
-			}
-			else
-			{
-				return BOOTLOADER_CMD_WRITE_RESULT_OK;
-			}
-
-		}break;
-	}
-
-	return BOOTLOADER_CMD_WRITE_RESULT_IDLE;
+	return state;
 }
 
 #endif
@@ -517,74 +381,81 @@ static bootLoaderCmdWriteResult_t hostBootLoader_sendCmdWriteMem(void)
 */
 void hostUartBootLoaderProcess(void)
 {
+	static uint32_t timeSendCmd = 0;
 
-	switch(hBootLoader.state)
+	if(__cmdCli()->flagMsgJumTarget == true)
 	{
-		case BOOTLOADER_STATE_IDLE:
-		{
-			if(hostBootLoaderCmdConnect() == true)
-			{
-				hBootLoader.state = BOOTLOADER_STATE_CONNECTED;
-			}
-		}break;
-		case BOOTLOADER_STATE_CONNECTED:
-		{
-			static bootLoaderGetState_t state = BOOTLOADER_GET_STATE_CMD_GET;
-			switch(state)
-			{
-				case BOOTLOADER_GET_STATE_CMD_GET:
-				{
-					if(hostBootLoader_sendCmdGet(&hBootLoader.boot.getCmd) == true)
-					{
-						state = BOOTLOADER_GET_STATE_CMD_GET_VER;
-					}
-				}break;
-				case BOOTLOADER_GET_STATE_CMD_GET_VER:
-				{
-					if(hostBootLoader_sendCmdGetVer(&hBootLoader.boot.getVer) == true)
-					{
-						state = BOOTLOADER_GET_STATE_CMD_GET_ID;
-					}
-				}break;
-				case BOOTLOADER_GET_STATE_CMD_GET_ID:
-				{
-					if(hostBootLoader_sendCmdGetId(&hBootLoader.boot.getId) == true)
-					{
-						state = BOOTLOADER_GET_STATE_DONE;
-					}
-				}break;
-				case BOOTLOADER_GET_STATE_DONE:
-				{
-					hBootLoader.state = BOOTLOADER_STATE_ERASE;
-				}
-			}
-		}break;
-		case BOOTLOADER_STATE_ERASE:
-		{
-			if(hostBootLoader_sendCmdErase() == true)
-			{
-				hBootLoader.state = BOOTLOADER_STATE_WRITE;
-			}
-		}break;
-		case BOOTLOADER_STATE_WRITE:
-		{
-			if(hostBootLoader_sendCmdWriteMem() == BOOTLOADER_CMD_WRITE_RESULT_OK)
-			{
-				hBootLoader.state = BOOTLOADER_STATE_DONE;
-			}
-			else if(hostBootLoader_sendCmdWriteMem() == BOOTLOADER_CMD_WRITE_RESULT_ERROR)
-			{
-				hBootLoader.state = BOOTLOADER_STATE_ERROR;
-			}
-		}break;
-		case BOOTLOADER_STATE_DONE:
-		{
+		host->isBootLoader = true;
+	}
 
-		}break;
-		case BOOTLOADER_STATE_ERROR:
+	if(host->isBootLoader == true)
+	{
+		if(host->uartConfigForHwBL == false)
 		{
+			host->uartConfigForHwBL = true;
 
-		}break;
+			printf("\n[hostUartBootLoaderProcess] re config uart for boot loader\n");
+
+			hostBootLoader_uartConfigForBL();
+		}
+		else
+		{
+			/// boot loader process
+			host->state = hostBootLoader_readCommand();
+
+			switch(host->state)
+			{
+				case HOST_BOOTLOADER_STATE_IDLE:
+				{
+					if(getTime(&timeSendCmd, 1000) == true)
+					{
+						printf("\n[hoatBootLoader_waittingResponeCmdConnect] waitting device connect ...\n");
+						hostBootLoader_sendCommand(BOOTLOADER_CMD_NONE);
+					}
+
+				}break;
+				case HOST_BOOTLOADER_STATE_CONNECTED:
+				{
+					if(getTime(&timeSendCmd, 1000) == true)
+					{
+						printf("\n[hoatBootLoader_waittingResponeCmdConnect] waitting device reponse cmd get ...\n");
+						hostBootLoader_sendCommand(BOOTLOADER_CMD_GET);
+					}
+				}break;
+				case HOST_BOOTLOADER_STATE_CMD_GET:
+				{
+					if(getTime(&timeSendCmd, 1000) == true)
+					{
+						printf("\n[hoatBootLoader_waittingResponeCmdConnect] waitting device reponse cmd getId ...\n");
+						hostBootLoader_sendCommand(BOOTLOADER_CMD_GET_ID);
+					}
+				}break;
+				case HOST_BOOTLOADER_STATE_GET_ID:
+				{
+
+				}break;
+				case HOST_BOOTLOADER_STATE_ERASE:
+				{
+
+				}break;
+				case HOST_BOOTLOADER_STATE_WRITE:
+				{
+
+				}break;
+				case HOST_BOOTLOADER_STATE_DONE:
+				{
+
+				}break;
+				case HOST_BOOTLOADER_STATE_ERROR:
+				{
+
+				}break;
+			}
+		}
+	}
+	else
+	{
+//		mavlinkControl_process();
 	}
 }
 

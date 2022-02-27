@@ -66,7 +66,9 @@ DMA_HandleTypeDef hdma_usart2_tx;
 DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
-
+#if (USE_HOST_BOOTLOADER == 1)
+	hostBootLoader_t host;
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -129,14 +131,14 @@ int main(void)
 #endif
 
 #if (USE_HOST_BOOTLOADER == 1)
-  hostUartBootLoaderConfiguration();
+  hostUartBootLoaderConfiguration(&host, &huart2);
 #endif
 
 #if (USE_DEVICE_BOOTLOADER == 1)
   uartBootLoaderConfiguration();
 #endif
 
-#if(USE_MAVLINK_CONTROL == 1)
+#if(USE_MAVLINK_CONTROL == 1 && USE_HOST_BOOTLOADER == 0)
   mavlinhControlConfiguration();
 #endif
   /* USER CODE END 2 */
@@ -156,7 +158,7 @@ int main(void)
 #if (USE_DEVICE_BOOTLOADER == 1)
 	  uartBootLoaderProcess();
 #endif
-#if(USE_MAVLINK_CONTROL == 1)
+#if(USE_MAVLINK_CONTROL == 1 && USE_HOST_BOOTLOADER == 0)
 	  mavlinkControl_process();
 #endif
     /* USER CODE END WHILE */

@@ -26,6 +26,8 @@ myLibrary/Src/uartCallback.o: ../myLibrary/Src/uartCallback.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h \
+ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/serialPort.h \
  E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/ringBuffer.h
 
 E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/uartCallback.h:
@@ -83,5 +85,9 @@ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/uartCallback.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
+
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/hostUartBootLoader.h:
+
+E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/serialPort.h:
 
 E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/ringBuffer.h:

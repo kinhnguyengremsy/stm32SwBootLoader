@@ -142,9 +142,9 @@ static void uartBootLoaderJumToApplication(void)
 /** @brief  uartBootLoader_checkParam
     @return none
 */
-static bool uartBootLoader_checkParam(uint16_t address, uint16_t value)
+static bool uartBootLoader_checkParam(uint16_t address, uint16_t *value)
 {
-	return (storageFlash_styleGremsy_read(address, &value));
+	return (storageFlash_styleGremsy_read(address, value));
 }
 
 /** @brief  uartBootLoaderConfiguration
@@ -184,14 +184,18 @@ void uartBootLoaderConfiguration(void)
 	storageFlash_configuration();
 
 	/// check param boot loader
-	if(uartBootLoader_checkParam(ADDRESS_PARAM_BOOTLOADER, 0x01) != true)
+	uint16_t paramValue = 0;
+	if(uartBootLoader_checkParam(ADDRESS_PARAM_BOOTLOADER, &paramValue) == true)
 	{
-		printf("\n[uartBootLoaderConfiguration] enable boot loader");
-	}
-	else
-	{
-		printf("\n[uartBootLoaderConfiguration] not enable boot loader");
-		uartBootLoaderJumToApplication();
+		if(paramValue == 1)
+		{
+			printf("\n[uartBootLoaderConfiguration] enable boot loader");
+		}
+		else
+		{
+			printf("\n[uartBootLoaderConfiguration] not enable boot loader");
+			uartBootLoaderJumToApplication();
+		}
 	}
 }
 

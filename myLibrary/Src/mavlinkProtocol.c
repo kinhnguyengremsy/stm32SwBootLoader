@@ -100,8 +100,7 @@ void mavlinkProtocol_serialPort4_Deinit(void)
 void mavlinkProtocol_init(void)
 {
 	#if (USE_HOST_BOOTLOADER == 1)
-		mavlinkProtocol_serialPort4_init();
-		printf("              : UART4 (tx : C10, rx : C11) -> COM4\n");
+
 	#endif
 	#if (USE_DEVICE_BOOTLOADER == 1)
 

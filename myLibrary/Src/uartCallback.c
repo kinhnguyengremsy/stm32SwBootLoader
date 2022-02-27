@@ -46,6 +46,9 @@
 #if (USE_HOST_BOOTLOADER == 1)
 	extern serialPort_t 		serial_port2;
 	extern UART_HandleTypeDef 	huart2;
+	extern ringBuffer_t 		rBufferHostBL;
+	extern uint8_t 				wData;
+	bool txComplete;
 #endif
 #if (USE_DEVICE_BOOTLOADER == 1)
 	extern UART_HandleTypeDef 	huart2;
@@ -58,7 +61,7 @@
 	extern UART_HandleTypeDef 	huart2;
 #endif
 
-#if (USE_MAVLINK_CONTROL == 1)
+#if (USE_MAVLINK_CONTROL == 1 && USE_HOST_BOOTLOADER == 0)
 	extern serialPort_t 		serial_port2;
 	extern UART_HandleTypeDef 	huart2;
 #endif
@@ -68,14 +71,6 @@
 	extern ringBuffer_t 		rBufferRxU1;
 	extern uint8_t 				usart1WData;
 	extern bool 				endCmd;
-#endif
-
-
-#if (USE_HOST_BOOTLOADER == 1)
-extern serialPort_t 		serial_port4;
-extern UART_HandleTypeDef 	huart4;
-extern ringBuffer_t 		rBufferRxU4;
-extern uint8_t 				wData;
 #endif
 
 /* Private function prototypes------------------------------------------------------------------------------*/
@@ -99,9 +94,16 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	#endif
 
 	#if (USE_HOST_BOOTLOADER == 1)
-		if(huart->Instance == huart4.Instance)
+		if(huart->Instance == huart2.Instance)
 		{
-			serialPort_tx_finish(&serial_port4);
+			if(__hostBL()->isBootLoader == true)
+			{
+				txComplete = true;
+			}
+			else
+			{
+				serialPort_tx_finish(&serial_port2);
+			}
 		}
 	#endif
 
@@ -111,7 +113,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 			serialPort_tx_finish(&serial_port2);
 		}
 	#endif
-	#if (USE_MAVLINK_CONTROL == 1)
+	#if (USE_MAVLINK_CONTROL == 1 && USE_HOST_BOOTLOADER == 0)
 		if(huart->Instance == huart2.Instance)
 		{
 			serialPort_tx_finish(&serial_port2);
@@ -141,9 +143,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	#endif
 
 	#if (USE_HOST_BOOTLOADER == 1)
-		if(huart->Instance == huart4.Instance)
+		if(huart->Instance == huart2.Instance)
 		{
+			if(__hostBL()->isBootLoader == true)
+			{
+				ringBufferWrite(&rBufferHostBL, wData);
 
+				if(HAL_UART_Receive_IT(&huart2, &wData, 1) != HAL_OK)
+				{
+					Error_Handler();
+				}
+			}
 		}
 	#endif
 
@@ -153,7 +163,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 		}
 	#endif
-	#if (USE_MAVLINK_CONTROL == 1)
+	#if (USE_MAVLINK_CONTROL == 1 && USE_HOST_BOOTLOADER == 0)
 		if(huart->Instance == huart2.Instance)
 		{
 
@@ -198,6 +208,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 #define __UART_ERROR_CALLBACK
 /** @brief  
     @return 
+*/
+
+
+#endif
+/**
+    @}
+*/
+
+/** @group __UART_ERROR_DEINIT
+    @{
+*/#ifndef __UART_ERROR_DEINIT
+#define __UART_ERROR_DEINIT
+/** @brief
+    @return
 */
 
 

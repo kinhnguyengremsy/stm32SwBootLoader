@@ -105,32 +105,35 @@ void mavlinkControl_process(void)
 
 	mavlinkMsg_readData();
 
-	if(HAL_GetTick() - timeSendHeartBeat > 2000)
+	if(HAL_GetTick() - timeSendHeartBeat > 500)
 	{
 		timeSendHeartBeat = HAL_GetTick();
 
 		if(__cmdCli()->flagMsgHeartBeat == true)
 		mavlinkControlSendHeartBeart(1);
+	}
 
-		if(__cmdCli()->flagMsgJumTarget == true)
+	if(__cmdCli()->flagMsgJumTarget == true)
+	{
+		__cmdCli()->flagMsgJumTarget = false;
 		mavlinkControlSendCmdJumTaget(1);
+	}
 
-		if(__cmdCli()->flagStorageRead == true)
-		{
-			__cmdCli()->flagStorageRead = false;
-			storageFlash_styleGremsy_read(__cmdCli()->value[7], &storageFlashDummyReadValue);
-			printf("\n[storageFlash_test_read] address = 0x%x | value = %d\n", (int)__cmdCli()->value[7], (int)storageFlashDummyReadValue);
-			storageFlashDummyReadAddress++;
-			storageFlashDummyReadValue = 0;
-		}
+	if(__cmdCli()->flagStorageRead == true)
+	{
+		__cmdCli()->flagStorageRead = false;
+		storageFlash_styleGremsy_read(__cmdCli()->value[7], &storageFlashDummyReadValue);
+		printf("\n[storageFlash_test_read] address = 0x%x | value = %d\n", (int)__cmdCli()->value[7], (int)storageFlashDummyReadValue);
+		storageFlashDummyReadAddress++;
+		storageFlashDummyReadValue = 0;
+	}
 
-		if(__cmdCli()->flagStorageWrite == true)
-		{
-			__cmdCli()->flagStorageWrite = false;
-			storageFlash_styleGremsy_write(__cmdCli()->value[5], __cmdCli()->value[6]);
-			printf("\n[storageFlash_test_write] address = 0x%x | value = %d\n", (int)__cmdCli()->value[5], (int)__cmdCli()->value[6]);
-			storageFlashDummyAddress++;
-		}
+	if(__cmdCli()->flagStorageWrite == true)
+	{
+		__cmdCli()->flagStorageWrite = false;
+		storageFlash_styleGremsy_write(__cmdCli()->value[5], __cmdCli()->value[6]);
+		printf("\n[storageFlash_test_write] address = 0x%x | value = %d\n", (int)__cmdCli()->value[5], (int)__cmdCli()->value[6]);
+		storageFlashDummyAddress++;
 	}
 }
 
