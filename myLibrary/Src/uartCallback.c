@@ -140,6 +140,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		if(huart->Instance == huart2.Instance)
 		{
 			ringBufferWrite(&rBufferRxU2, usart2WData);
+
+		    /// xoa bo dem uart truoc khi truyen
+		    __HAL_UART_FLUSH_DRREGISTER(&huart2);
 		}
 	#endif
 

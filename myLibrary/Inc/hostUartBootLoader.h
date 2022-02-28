@@ -33,7 +33,6 @@
 /* Exported types ------------------------------------------------------------*/
 typedef enum
 {
-	HOST_BOOTLOADER_STATE_IDLE,
 	HOST_BOOTLOADER_STATE_CONNECTED,
 	HOST_BOOTLOADER_STATE_CMD_GET,
 	HOST_BOOTLOADER_STATE_GET_ID,

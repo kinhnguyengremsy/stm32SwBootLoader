@@ -57,7 +57,7 @@ struct _bootLoaderCmdList
 	uint8_t cmdHeader;
 	uint8_t cmdFooter;
 }bootLoaderCmdList[BOOTLOADER_CMD_GET_TOTAL] = {
-		{.cmdHeader = 0x00, .cmdFooter = 0x00},
+		{.cmdHeader = 0x00					, .cmdFooter = 0x00},
 		{.cmdHeader = UART_BOOTLOADER_CMD_GET				, .cmdFooter = UART_BOOTLOADER_CMD_GET 		^ 0xff},
 		{.cmdHeader = UART_BOOTLOADER_CMD_GET_VER			, .cmdFooter = UART_BOOTLOADER_CMD_GET_VER 	^ 0xff},
 		{.cmdHeader = UART_BOOTLOADER_CMD_GET_ID			, .cmdFooter = UART_BOOTLOADER_CMD_GET_ID 	^ 0xff},
@@ -69,6 +69,7 @@ struct _bootLoaderCmdList
 		{.cmdHeader = UART_BOOTLOADER_CMD_WRITE_UNPROTECT	, .cmdFooter = 0x8C},
 		{.cmdHeader = UART_BOOTLOADER_CMD_READ_PROTECT		, .cmdFooter = 0x7D},
 		{.cmdHeader = UART_BOOTLOADER_CMD_READ_UNPROTECT	, .cmdFooter = 0x6D},
+		{.cmdHeader = UART_BOOTLOADER_CMD_CONNECT			, .cmdFooter = UART_BOOTLOADER_CMD_CONNECT},
 //		{.cmdHeader = UART_BOOTLOADER_CMD_GET_CHECKSUM		, .cmdFooter = 0x5E},
 };
 
@@ -88,7 +89,7 @@ struct _bootLoaderCmdStr_t
 		{.str = "BOOTLOADER_CMD_WRITE_UNPROTECT"},
 		{.str = "BOOTLOADER_CMD_READ_PROTECT"},
 		{.str = "BOOTLOADER_CMD_READ_UNPROTECT"},
-		{.str = "BOOTLOADER_CMD_GET_CHECKSUM"},
+		{.str = "BOOTLOADER_CMD_TWO_ACK"},
 };
 
 /* Private define-----------------------------------------------------------------------------*/
@@ -147,11 +148,13 @@ static bool uartBootLoader_checkParam(uint16_t address, uint16_t *value)
 	return (storageFlash_styleGremsy_read(address, value));
 }
 
-/** @brief  uartBootLoaderConfiguration
+/** @brief  uartBootLoaderUartConfiguration
     @return none
 */
-void uartBootLoaderConfiguration(void)
+static void uartBootLoaderUartConfiguration(void)
 {
+	HAL_UART_DeInit(&huart2);
+
 	huart2.Instance 				= USART2;
 	huart2.Init.BaudRate 			= 115200;//460800 ;
 	huart2.Init.WordLength 			= UART_WORDLENGTH_9B;
@@ -179,6 +182,18 @@ void uartBootLoaderConfiguration(void)
 	{
 		Error_Handler();
 	}
+
+	HAL_Delay(50);
+}
+
+/** @brief  uartBootLoaderConfiguration
+    @return none
+*/
+void uartBootLoaderConfiguration(void)
+{
+	uartBootLoaderUartConfiguration();
+
+
 
 	/// config flash style gremsy
 	storageFlash_configuration();
@@ -297,6 +312,7 @@ static bool uartBootLoaderRecieverCmdConnect(void)
 {
 	uint8_t rData = 0;
 	static uint32_t timePrintDebug = 0;
+	static uint8_t countTimeOut = 0;
 
 	if(rBufferRxU2.len >= 1)
 	{
@@ -306,6 +322,7 @@ static bool uartBootLoaderRecieverCmdConnect(void)
 			{
 				uartBootLoaderSendAck();
 				timePrintDebug = 0;
+				countTimeOut = 0;
 
 				printf("\n[uartBootLoaderRecieverCmdConnect] boot connected !@! len = %d\n", rBufferRxU2.len);
 
@@ -322,9 +339,20 @@ static bool uartBootLoaderRecieverCmdConnect(void)
 	if(HAL_GetTick() - timePrintDebug > 1000)
 	{
 		timePrintDebug = HAL_GetTick();
-		printf("\n[uartBootLoaderRecieverCmdConnect] waitting cmd connect ...\n");
 
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+		if(++countTimeOut > 5)
+		{
+			countTimeOut = 0;
+			printf("\n[uartBootLoaderRecieverCmdConnect] re config uart boot loader ...\n");
+
+			uartBootLoaderUartConfiguration();
+		}
+		else
+		{
+			printf("\n[uartBootLoaderRecieverCmdConnect] waitting cmd connect ...\n");
+
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+		}
 	}
 
 
@@ -1150,6 +1178,12 @@ static void uartBootLoaderStateConnected(uartBootLoader_t *boot)
 				boot->rCmd = BOOTLOADER_CMD_NONE;
 			}
 		}break;
+		case BOOTLOADER_CMD_TWO_ACK:
+		{
+			uartBootLoaderSendAck();
+			printf("\n[uartBootLoaderStateConnected] two cmd connect --> send ack ....\n");
+			boot->rCmd = BOOTLOADER_CMD_NONE;
+		}
 	}
 }
 
