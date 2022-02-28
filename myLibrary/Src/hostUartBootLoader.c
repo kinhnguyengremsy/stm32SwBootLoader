@@ -60,6 +60,14 @@ typedef struct
 	bootLoaderGetCmd_t cmdGet;
 	bootLoaderGetIdCmd_t cmdGetId;
 
+	uint8_t cmdEraseState;
+	bool deviceReponseCmdErase;
+
+	uint8_t cmdWriteMemState;
+	bool deviceReponseCmdWrite;
+	bool readDataSource;
+	uint8_t writeData[256];
+
 }hostBootLoaderPrivate_t;
 /* Private macro------------------------------------------------------------------------------*/
 /* Private variables------------------------------------------------------------------------------*/
@@ -148,11 +156,18 @@ static void hostBootLoader_uartConfigForBL(void)
 	HAL_Delay(500);
 
 	ringBufferInit(&rBufferHostBL);
-
+#if(HOST_USE_UART_IT == 1)
 	if(HAL_UART_Receive_IT(uart_hostBL, &wData, 1) != HAL_OK)
 	{
 		Error_Handler();
 	}
+#else
+	if(HAL_UART_Receive_DMA(uart_hostBL, &wData, 1) != HAL_OK)
+	{
+		Error_Handler();
+	}
+#endif
+
 
     /// xoa bo dem uart truoc khi truyen
     __HAL_UART_FLUSH_DRREGISTER(uart_hostBL);
@@ -163,7 +178,13 @@ static void hostBootLoader_uartConfigForBL(void)
 */
 static void hostBootLoader_sendData(uint8_t *buffer, uint16_t len)
 {
+
+#if(HOST_USE_UART_IT == 1)
 	HAL_UART_Transmit_IT(uart_hostBL, buffer, len);
+#else
+	HAL_UART_Transmit_DMA(uart_hostBL, buffer, len);
+#endif
+
 	while(txComplete == false);
 	txComplete = false;
 }
@@ -199,10 +220,10 @@ static void hostBootLoader_sendCommand(uint8_t cmdIndex)
 	printf("\n[hostBootLoader_sendCommand] 0x%x | 0x%x\n", host->hostCmd[0], host->hostCmd[1]);
 }
 
-/** @brief  hoatBootLoader_waittingResponeCmdConnect
+/** @brief  hostBootLoader_waittingResponeCmdConnect
     @return number of command
 */
-static bool hoatBootLoader_waittingResponeCmdConnect(void)
+static bool hostBootLoader_waittingResponeCmdConnect(void)
 {
 	uint8_t rData = 0;
 
@@ -212,7 +233,7 @@ static bool hoatBootLoader_waittingResponeCmdConnect(void)
 		{
 			if(rData == UART_BOOTLOADER_ACK)
 			{
-				printf("\n[hoatBootLoader_waittingResponeCmdConnect] device connected !@!\n");
+				printf("\n[hostBootLoader_waittingResponeCmdConnect] device connected !@!\n");
 				return true;
 			}
 		}
@@ -221,10 +242,10 @@ static bool hoatBootLoader_waittingResponeCmdConnect(void)
 	return false;
 }
 
-/** @brief  hoatBootLoader_waittingResponeCmdGet
+/** @brief  hostBootLoader_waittingResponeCmdGet
     @return number of command
 */
-static bool hoatBootLoader_waittingResponeCmdGet(void)
+static bool hostBootLoader_waittingResponeCmdGet(void)
 {
 	uint8_t rData = 0;
 	uint8_t buffer[BOOTLOADER_CMD_GET_LEN];
@@ -263,10 +284,10 @@ static bool hoatBootLoader_waittingResponeCmdGet(void)
 	return false;
 }
 
-/** @brief  hoatBootLoader_waittingResponeCmdGetId
+/** @brief  hostBootLoader_waittingResponeCmdGetId
     @return number of command
 */
-static bool hoatBootLoader_waittingResponeCmdGetId(void)
+static bool hostBootLoader_waittingResponeCmdGetId(void)
 {
 	uint8_t rData = 0;
 	uint8_t buffer[BOOTLOADER_CMD_GET_ID_LEN];
@@ -286,13 +307,361 @@ static bool hoatBootLoader_waittingResponeCmdGetId(void)
 			hostPri.cmdGetId.byte4 = buffer[3];
 			hostPri.cmdGetId.PID = hostPri.cmdGetId.byte3 << 8 | hostPri.cmdGetId.byte4;
 
-			printf("\n[hoatBootLoader_waittingResponeCmdGetId] chipId : 0x%x\n", hostPri.cmdGetId.PID);
+			printf("\n[hostBootLoader_waittingResponeCmdGetId] chipId : 0x%x\n", hostPri.cmdGetId.PID);
 
 			return true;
 		}
 	}
 
 	return false;
+}
+
+/** @brief  hostBootLoader_waittingResponeCmdErase
+    @return uint8_t
+*/
+static uint8_t hostBootLoader_waittingResponeCmdErase(void)
+{
+	uint8_t rData = 0;
+	switch(hostPri.cmdEraseState)
+	{
+		case 0: /// waitting ack
+		{
+			if(rBufferHostBL.len >= 1)
+			{
+				printf("[hostBootLoader_waittingResponeCmdErase] Erase memory ....\n");
+				if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+				{
+					if(rData == UART_BOOTLOADER_ACK)
+					{
+						hostPri.deviceReponseCmdErase = true;
+						printf("[hostBootLoader_waittingResponeCmdErase] Erase memory running ....\n");
+						hostPri.cmdEraseState = 1;
+					}
+					else
+					{
+						hostPri.cmdEraseState = 4;
+					}
+				}
+			}
+		}break;
+		case 1: /// send number of byte
+		{
+			uint8_t buffer[3] = {0xff, 0xff, 0x00};
+			hostBootLoader_sendData(buffer, 3);
+
+			hostPri.cmdEraseState = 2;
+		}break;
+		case 2: // waitting ack
+		{
+			if(rBufferHostBL.len >= 1)
+			{
+				if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+				{
+					if(rData == UART_BOOTLOADER_ACK)
+					{
+						hostPri.cmdEraseState = 3;
+					}
+					else
+					{
+						hostPri.cmdEraseState = 4;
+					}
+				}
+			}
+		}break;
+		case 3:
+		{
+			/// clear flag reponse cmd erase
+			hostPri.deviceReponseCmdErase = false;
+
+			printf("[hostBootLoader_waittingResponeCmdErase] Erase memory successfull ....\n");
+			return 3;
+		}break;
+		case 4:
+		{
+			/// clear flag reponse cmd erase
+			hostPri.deviceReponseCmdErase = false;
+
+			printf("[hostBootLoader_waittingResponeCmdErase] Erase memory fail ....\n");
+			return 4;
+		}break;
+	}
+
+	return 0;
+}
+
+/** @brief  hostBootLoader_readDataFromFlash
+    @return bool
+*/
+static void hostBootLoader_readDataFromFlash(hostBootLoaderPrivate_t *private, uint32_t flashStartAddress)
+{
+    uint32_t data = 0;
+
+    /// clear buffer
+    memset(private->writeData, 0, STM32_MAX_FRAME);
+
+    for(uint16_t i = 0; i < STM32_MAX_FRAME; i+=4)
+    {
+        /// read flash
+        data = *(__IO uint32_t*)flashStartAddress;
+
+        memcpy(&private->writeData[i], (uint8_t *)&data, 4);
+
+        flashStartAddress += 4;
+    }
+}
+
+/** @brief  hostBootLoader_writeMemCmd
+    @return uint8_t
+*/
+static bool  hostBootLoader_readMemCmd(uint32_t address, uint8_t *data, uint16_t len)
+{
+	uint8_t cmdBuffer[2] = {hostPri.cmdGet.readMemoryCmd, hostPri.cmdGet.readMemoryCmd ^ 0xff};
+	uint8_t addressBuffer[5] = {0};
+	uint8_t NOBbuffer[2] = {0};
+
+    if(!len)
+    {
+    	printf("\n[hostBootLoader_readMemCmd] len error\n");
+        return false;
+    }
+
+    if(len > STM32_MAX_FRAME)
+    {
+        printf("\n[hostBootLoader_readMemCmd] Error: READ length limit at STM32_MAX_FRAME bytes\n");
+
+        return false;
+    }
+
+    printf("[BL_readMemory_command] Read memory ....\n");
+
+	hostBootLoader_sendData(cmdBuffer, 2);
+
+	while(rBufferHostBL.len < 1); /// waitting ack 1
+
+	/// read ack 1
+	if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+	{
+		if(rData != UART_BOOTLOADER_ACK)
+		{
+			printf("\n[hostBootLoader_writeMemCmd] ack error 1\n");
+			return false;
+		}
+	}
+
+    addressBuffer[0] = address >> 24;
+    addressBuffer[1] = (address >> 16) & 0xFF;
+    addressBuffer[2] = (address >> 8) & 0xFF;
+    addressBuffer[3] = address & 0xFF;
+    addressBuffer[4] = addressBuffer[0] ^ addressBuffer[1] ^ addressBuffer[2] ^ addressBuffer[3];
+
+    hostBootLoader_sendData(addressBuffer, 5);
+
+	while(rBufferHostBL.len < 1); /// waitting ack 2
+
+	/// read ack 2
+	if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+	{
+		if(rData != UART_BOOTLOADER_ACK)
+		{
+			printf("\n[hostBootLoader_writeMemCmd] ack error 2\n");
+			return false;
+		}
+	}
+
+	NOBbuffer[0] = len - 1;
+	NOBbuffer[1] = NOBbuffer[0] ^ 0xff;
+
+	while(rBufferHostBL.len < STM32_MAX_FRAME + 1); /// waitting ack 2
+
+	/// read ack 2
+	if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+	{
+		if(rData != UART_BOOTLOADER_ACK)
+		{
+			printf("\n[hostBootLoader_writeMemCmd] ack error 2\n");
+			return false;
+		}
+	}
+
+	for(uint16_t i = 0; i < STM32_MAX_FRAME; i++)
+	{
+		/// read data
+		if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+		{
+			data[i] = rData;
+		}
+	}
+
+	return true;
+}
+
+/** @brief  hostBootLoader_writeMemCmd
+    @return uint8_t
+*/
+static bool hostBootLoader_verifyMemory()
+{
+
+}
+
+/** @brief  hostBootLoader_writeMemCmd
+    @return uint8_t
+*/
+static bool hostBootLoader_writeMemCmd(uint32_t address, uint8_t *data, uint16_t len)
+{
+	uint8_t cmdBuffer[2] = {hostPri.cmdGet.writeMemoryCmd, hostPri.cmdGet.writeMemoryCmd ^ 0xff};
+	uint8_t addressBuffer[5] = {0};
+	uint8_t cs = 0;
+	uint8_t dataBuffer[STM32_MAX_FRAME + 2] = {0};
+	uint16_t i, aligned_len;
+	uint8_t rData = 0;
+
+	if(!len)
+	{
+		printf("\n[hostBootLoader_writeMemCmd] len error 1\n");
+		return false;
+	}
+
+	if(len > STM32_MAX_FRAME)
+	{
+		printf("\n[hostBootLoader_writeMemCmd] len error 2\n");
+		return false;
+	}
+
+	uint32_t check = address & 0x30;
+	if(check)
+	{
+		printf("\n[hostBootLoader_writeMemCmd] address error 1\n");
+		return false;
+	}
+
+	hostBootLoader_sendData(cmdBuffer, 2);
+
+	while(rBufferHostBL.len < 1); /// waitting ack 1
+
+	/// read ack 1
+	if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+	{
+		if(rData != UART_BOOTLOADER_ACK)
+		{
+			printf("\n[hostBootLoader_writeMemCmd] ack error 1\n");
+			return false;
+		}
+	}
+
+    addressBuffer[0] = address >> 24;
+    addressBuffer[1] = (address >> 16) & 0xFF;
+    addressBuffer[2] = (address >> 8) & 0xFF;
+    addressBuffer[3] = address & 0xFF;
+    addressBuffer[4] = addressBuffer[0] ^ addressBuffer[1] ^ addressBuffer[2] ^ addressBuffer[3];
+
+    hostBootLoader_sendData(addressBuffer, 5);
+
+	while(rBufferHostBL.len < 1); /// waitting ack 2
+
+	/// read ack 2
+	if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+	{
+		if(rData != UART_BOOTLOADER_ACK)
+		{
+			printf("\n[hostBootLoader_writeMemCmd] ack error 2\n");
+			return false;
+		}
+	}
+
+    aligned_len = (len + 3) & ~3;
+    cs = aligned_len - 1;
+    dataBuffer[0] = aligned_len - 1;
+    for (i = 0; i < len; i++)
+    {
+        cs ^= data[i];
+        dataBuffer[i + 1] = data[i];
+    }
+    /* padding data */
+    for (i = len; i < aligned_len; i++)
+    {
+        cs ^= 0xFF;
+        dataBuffer[i + 1] = 0xFF;
+    }
+    dataBuffer[aligned_len + 1] = cs;
+
+    hostBootLoader_sendData(dataBuffer, aligned_len + 2);
+
+	while(rBufferHostBL.len < 1); /// waitting ack 3
+
+	/// read ack 3
+	if(ringBufferRead(&rBufferHostBL, &rData) == RING_BUFFER_OK)
+	{
+		if(rData != UART_BOOTLOADER_ACK)
+		{
+			printf("\n[hostBootLoader_writeMemCmd] ack error 3\n");
+			return false;
+		}
+		else
+		{
+			printf("\n[hostBootLoader_writeMemCmd] write memory successful\n");
+		}
+	}
+
+	return true;
+}
+
+/** @brief  hostBootLoader_waittingResponeCmdWriteMem
+    @return uint8_t
+*/
+static uint8_t hostBootLoader_waittingResponeCmdWriteMem(void)
+{
+	uint8_t rData = 0;
+    uint32_t flashAddress = 0x08010000;
+    uint32_t maxDataLength = 0x113c;
+    uint32_t start = 0x08020000;
+    uint32_t end = start + maxDataLength;
+    uint32_t left;
+    uint16_t len = 0;
+    uint32_t addr = start;
+    uint32_t offset = 0;
+    uint16_t size = end - start;
+
+    while(addr < end && offset < size)
+    {
+    	switch(hostPri.cmdWriteMemState)
+    	{
+    		case 0: /// read source data from flash
+    		{
+    			hostBootLoader_readDataFromFlash(&hostPri, flashAddress);
+
+    			hostPri.cmdWriteMemState = 1;
+    		}break;
+    		case 1: /// calculator address offset and write to memory
+    		{
+    	        left = end - addr;
+    	        len = STM32_MAX_FRAME > left ? left : STM32_MAX_FRAME;
+    	        len = len > (size - offset) ? (size - offset) : len;
+
+    			if(hostBootLoader_writeMemCmd(addr, hostPri.writeData, STM32_MAX_FRAME) == true)
+    			{
+    				hostPri.cmdWriteMemState = 2;
+    			}
+    		}break;
+    		case 2: /// verify memory after write
+    		{
+
+    		}break;
+    		case 3:
+    		{
+
+    		}break;
+    		case 4:
+    		{
+
+    		}break;
+    		case 5:
+    		{
+
+    		}break;
+    	}
+    }
+
+	return 0;
 }
 
 /** @brief  hostBootLoader_readCommand
@@ -314,7 +683,6 @@ static hostBootLoaderState_t hostBootLoader_readCommand(void)
 		{
 			hostBootLoader_sendData(host->hostCmd, 2);
 		}
-
 	}
 	else
 	{
@@ -322,14 +690,14 @@ static hostBootLoaderState_t hostBootLoader_readCommand(void)
 		{
 			case UART_BOOTLOADER_CMD_CONNECT:
 			{
-				if(hoatBootLoader_waittingResponeCmdConnect() == true)
+				if(hostBootLoader_waittingResponeCmdConnect() == true)
 				{
 					state = HOST_BOOTLOADER_STATE_CONNECTED;
 				}
 			}break;
 			case UART_BOOTLOADER_CMD_GET:
 			{
-				if(hoatBootLoader_waittingResponeCmdGet() == true)
+				if(hostBootLoader_waittingResponeCmdGet() == true)
 				{
 					state = HOST_BOOTLOADER_STATE_CMD_GET;
 				}
@@ -340,7 +708,7 @@ static hostBootLoaderState_t hostBootLoader_readCommand(void)
 			}break;
 			case UART_BOOTLOADER_CMD_GET_ID:
 			{
-				if(hoatBootLoader_waittingResponeCmdGetId() == true)
+				if(hostBootLoader_waittingResponeCmdGetId() == true)
 				{
 					state = HOST_BOOTLOADER_STATE_GET_ID;
 				}
@@ -359,7 +727,16 @@ static hostBootLoaderState_t hostBootLoader_readCommand(void)
 			}break;
 			case UART_BOOTLOADER_CMD_ERASE:
 			{
-
+				static uint8_t state = 0;
+				state = hostBootLoader_waittingResponeCmdErase();
+				if(state == 3)
+				{
+					state = HOST_BOOTLOADER_STATE_ERASE;
+				}
+				else if(state == 4)
+				{
+					state = HOST_BOOTLOADER_STATE_ERROR;
+				}
 			}break;
 		}
 	}
@@ -409,16 +786,15 @@ void hostUartBootLoaderProcess(void)
 				{
 					if(getTime(&timeSendCmd, 1000) == true)
 					{
-						printf("\n[hoatBootLoader_waittingResponeCmdConnect] waitting device connect ...\n");
+						printf("\n[hostBootLoader_waittingResponeCmdConnect] waitting device connect ...\n");
 						hostBootLoader_sendCommand(BOOTLOADER_CMD_NONE);
 					}
-
 				}break;
 				case HOST_BOOTLOADER_STATE_CONNECTED:
 				{
 					if(getTime(&timeSendCmd, 1000) == true)
 					{
-						printf("\n[hoatBootLoader_waittingResponeCmdConnect] waitting device reponse cmd get ...\n");
+						printf("\n[hostBootLoader_waittingResponeCmdConnect] waitting device reponse cmd get ...\n");
 						hostBootLoader_sendCommand(BOOTLOADER_CMD_GET);
 					}
 				}break;
@@ -426,17 +802,28 @@ void hostUartBootLoaderProcess(void)
 				{
 					if(getTime(&timeSendCmd, 1000) == true)
 					{
-						printf("\n[hoatBootLoader_waittingResponeCmdConnect] waitting device reponse cmd getId ...\n");
+						printf("\n[hostBootLoader_waittingResponeCmdConnect] waitting device reponse cmd getId ...\n");
 						hostBootLoader_sendCommand(BOOTLOADER_CMD_GET_ID);
 					}
 				}break;
 				case HOST_BOOTLOADER_STATE_GET_ID:
 				{
-
+					if(getTime(&timeSendCmd, 1000) == true)
+					{
+						printf("\n[hostBootLoader_waittingResponeCmdConnect] waitting device reponse cmd erase ...\n");
+						if(hostPri.deviceReponseCmdErase == false)
+						{
+							hostBootLoader_sendCommand(BOOTLOADER_CMD_ERASE);
+						}
+					}
 				}break;
 				case HOST_BOOTLOADER_STATE_ERASE:
 				{
-
+					if(getTime(&timeSendCmd, 1000) == true)
+					{
+						printf("\n[hostBootLoader_waittingResponeCmdConnect] waitting device reponse cmd write memory ...\n");
+						hostBootLoader_sendCommand(BOOTLOADER_CMD_WRITE_MEMORY);
+					}
 				}break;
 				case HOST_BOOTLOADER_STATE_WRITE:
 				{

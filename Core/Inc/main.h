@@ -62,10 +62,10 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN Private defines */
-#define USE_HOST_BOOTLOADER				1
-#define USE_DEVICE_BOOTLOADER			0
+#define USE_HOST_BOOTLOADER				0
+#define USE_DEVICE_BOOTLOADER			1
 #define USE_MAVLINK_BOOTLOADER			0
-#define USE_MAVLINK_CONTROL				1
+#define USE_MAVLINK_CONTROL				0
 
 #define USE_COMMAND_LINE_INTERFACE		1
 

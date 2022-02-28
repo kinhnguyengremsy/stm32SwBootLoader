@@ -62,8 +62,8 @@ all:
 main-build: stm32SwBootLoader.elf secondary-outputs
 
 # Tool invocations
-stm32SwBootLoader.elf: $(OBJS) $(USER_OBJS) E:\2022-work\firmware\home\stm32\stm32SwBootLoader\STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "stm32SwBootLoader.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\2022-work\firmware\home\stm32\stm32SwBootLoader\STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="stm32SwBootLoader.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+stm32SwBootLoader.elf: $(OBJS) $(USER_OBJS) D:\Gremsy\firmware\FirmwareCurrent\stm32SwBootLoader\STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "stm32SwBootLoader.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\Gremsy\firmware\FirmwareCurrent\stm32SwBootLoader\STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="stm32SwBootLoader.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

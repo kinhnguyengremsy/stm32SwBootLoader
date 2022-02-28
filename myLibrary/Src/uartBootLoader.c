@@ -197,6 +197,10 @@ void uartBootLoaderConfiguration(void)
 			uartBootLoaderJumToApplication();
 		}
 	}
+	else
+	{
+		printf("\n[uartBootLoaderConfiguration] not found param enable boot loader\n");
+	}
 }
 
 #endif

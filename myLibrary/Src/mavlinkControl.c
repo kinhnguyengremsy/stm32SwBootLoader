@@ -51,7 +51,7 @@ void mavlinhControlConfiguration(void)
 	uartCLI_configuration(&cli);
 	memset(&cli, 0, sizeof(uartCLI_t));
 
-	__cmdCli()->flagMsgHeartBeat = true;
+//	__cmdCli()->flagMsgHeartBeat = true;
 }
 
 #endif

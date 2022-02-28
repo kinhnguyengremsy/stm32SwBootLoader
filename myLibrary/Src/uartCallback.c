@@ -41,6 +41,7 @@
 #endif
 /* Private typedef------------------------------------------------------------------------------*/
 /* Private define------------------------------------------------------------------------------*/
+
 /* Private macro------------------------------------------------------------------------------*/
 /* Private variables------------------------------------------------------------------------------*/
 #if (USE_HOST_BOOTLOADER == 1)
@@ -148,11 +149,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			if(__hostBL()->isBootLoader == true)
 			{
 				ringBufferWrite(&rBufferHostBL, wData);
-
+#if(HOST_USE_UART_IT == 1)
 				if(HAL_UART_Receive_IT(&huart2, &wData, 1) != HAL_OK)
 				{
 					Error_Handler();
 				}
+#endif
 			}
 		}
 	#endif
