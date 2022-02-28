@@ -158,6 +158,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 					Error_Handler();
 				}
 #endif
+
+			    /// xoa bo dem uart truoc khi truyen
+			    __HAL_UART_FLUSH_DRREGISTER(&huart2);
 			}
 		}
 	#endif

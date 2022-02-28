@@ -523,8 +523,9 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 	uint8_t rData = 0;
 	uint8_t addressBuffer[5] = {0, 0, 0, 0, 0};
 	static uint32_t rAddress = 0;
-	static uint32_t oldRaddress = 0x08000000;
-	static uint32_t realAddress = ADDRESS_START_APPLICATION;
+	static bool getStartAddress = false;
+	static uint32_t oldRaddress = 0;
+	static uint32_t realAddress = 0;
 	uint8_t nBuffer[2] = {0, 0};
 	static uint8_t state = 0;
 
@@ -555,6 +556,15 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 				rAddress |= addressBuffer[2] << 8;
 				rAddress |= addressBuffer[1] << 16;
 				rAddress |= addressBuffer[0] << 24;
+
+                /// get start address 1 lan duy nhat
+                if(getStartAddress == false)
+                {
+                    getStartAddress = true;
+                    oldRaddress = rAddress;
+
+                    realAddress = rAddress;
+                }
 
 				uint8_t checksum = uartBootLoaderChecksumCalculator(0, addressBuffer, 4);
 				uint8_t rChecksum = addressBuffer[4];
@@ -615,7 +625,7 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 				{
 					uartBootLoaderSendAck();
 #if(USE_CONSOLE_DEBUG == 1)
-					printf("\n[uartBootLoaderResponseCmdReadMem] send Ack byte 2...\n");
+					printf("\n[uartBootLoaderResponseCmdReadMem] send Ack byte 3...\n");
 #endif
 				}
 
@@ -644,7 +654,10 @@ static bool uartBootLoaderResponseCmdReadMem(void)
 			printf("\n[uartBootLoaderResponseCmdReadMem] send %d successful\n", STM32_MAX_FRAME);
 #endif
 			state = 0;
-			rAddress = 0;
+            rAddress = 0;
+            getStartAddress = false;
+            oldRaddress = 0;
+            realAddress = 0;
 
 			return true;
 		}break;
@@ -914,7 +927,7 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 				rAddress |= addressBuffer[1] << 16;
 				rAddress |= addressBuffer[0] << 24;
 
-				/// get start address 1 la duy nhat
+				/// get start address 1 lan duy nhat
 				if(getStartAddress == false)
 				{
 					getStartAddress = true;
@@ -1138,6 +1151,12 @@ static void uartBootLoaderStateConnected(uartBootLoader_t *boot)
 		{
 //			if(uartBootLoaderResponseCmdGo() == true)
 //			{
+
+				/// response ack to host
+				uartBootLoaderSendAck();
+	#if(USE_CONSOLE_DEBUG == 1)
+				printf("\n[uartBootLoaderResponseCmdGo] send Ack byte...\n");
+	#endif
 				boot->state = BOOTLOADER_STATE_RESET_PARAM_BOOTLOADER;
 				printf("\n[uartBootLoaderStateConnected] reset param enable boot loader\n");
 //			}
