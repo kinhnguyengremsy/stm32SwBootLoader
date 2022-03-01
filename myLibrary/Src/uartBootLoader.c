@@ -884,6 +884,75 @@ static bool uartBootLoaderResponseCmdErase(void)
 /** @brief  uartBootLoaderResponseCmdWriteMem
     @return bool
 */
+static bool uartBootLoader_recieverNumOfBytes(uint8_t checksum, uint32_t rAddress, uint32_t oldRaddress, uint32_t realAddress)
+{
+	static uint16_t datalenth = 0;
+	uint8_t *data;
+	uint8_t rChecksum = 0;
+	uint8_t rData = 0;
+
+	if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
+	{
+		datalenth = rData;
+		printf("\n[uartBootLoaderResponseCmdWriteMem] number of bytes = %d\n", datalenth);
+	}
+
+	data = calloc(datalenth + 1 + 1, sizeof(uint8_t));
+
+	for(uint16_t i = 0; i <= (datalenth + 1); i++)
+	{
+		if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
+		{
+			data[i] = rData;
+		}
+	}
+
+	/*data[0] : number of bytes
+	data[1 - 256] : 256 byte data
+	data[257] : checksum*/
+	checksum = uartBootLoaderChecksumCalculator(0, data, datalenth + 1);
+	checksum ^= datalenth;
+
+	rChecksum = data[datalenth + 1];
+
+	printf("\n[uartBootLoaderResponseCmdWriteMem] checksum = %d | rChecksum = %d\n", checksum, rChecksum);
+
+	if(checksum == rChecksum)
+	{
+		uint32_t addressOffset = rAddress - oldRaddress;
+		oldRaddress = rAddress;
+		realAddress += addressOffset;
+//#if(USE_CONSOLE_DEBUG == 1)
+		printf("\n[uartBootLoaderResponseCmdWriteMem] addressOffset = 0x%x | realAddress = 0x%x\n", (int)addressOffset, (int)realAddress);
+//#endif
+		/// write to flash
+		storageFlash_writeData(realAddress, data, datalenth + 1);
+
+		/// send ack
+		uartBootLoaderSendAck();
+//#if(USE_CONSOLE_DEBUG == 1)
+		printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte 3...\n");
+//#endif
+	}
+	else
+	{
+		uartBootLoaderSendNack();
+//#if(USE_CONSOLE_DEBUG == 1)
+		printf("\n[uartBootLoaderResponseCmdWriteMem] state 3 send nack byte...\n");
+//#endif
+
+		return false;
+	}
+
+	datalenth = 0;
+	free(data);
+
+	return true;
+}
+
+/** @brief  uartBootLoaderResponseCmdWriteMem
+    @return bool
+*/
 static bool uartBootLoaderResponseCmdWriteMem(void)
 {
 	static bootLoaderCmdWriteMemState_t state = CMD_WRITE_MEM_STATE_REPONSE_ACK_BEGIN;
@@ -893,6 +962,7 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 	static bool getStartAddress = false;
 	static uint32_t oldRaddress = 0;
 	static uint32_t realAddress = 0;
+	static uint32_t timeOutRec = 0;
 	uint8_t checksum = 0;
 
 	switch(state)
@@ -901,9 +971,9 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 		{
 			/// response ack to host
 			uartBootLoaderSendAck();
-#if(USE_CONSOLE_DEBUG == 1)
-			printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte...\n");
-#endif
+//#if(USE_CONSOLE_DEBUG == 1)
+			printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte 1...\n");
+//#endif
 			state = CMD_WRITE_MEM_STATE_RECIEVE_ADDRESS_AND_CHECKSUM;
 		}break;
 		case CMD_WRITE_MEM_STATE_RECIEVE_ADDRESS_AND_CHECKSUM:
@@ -943,72 +1013,50 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 				if(checksum == addressBuffer[4])
 				{
 					uartBootLoaderSendAck();
-#if(USE_CONSOLE_DEBUG == 1)
-					printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte...\n");
-#endif
+//#if(USE_CONSOLE_DEBUG == 1)
+					printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte 2...\n");
+//#endif
+
+					timeOutRec = HAL_GetTick();
 					state = CMD_WRITE_MEM_STATE_WRITE_TO_FLASH;
 				}
 				else
 				{
 					uartBootLoaderSendNack();
-#if(USE_CONSOLE_DEBUG == 1)
-					printf("\n[uartBootLoaderResponseCmdWriteMem] state 1 send nack byte...\n");
-#endif
+//#if(USE_CONSOLE_DEBUG == 1)
+					printf("\n[uartBootLoaderResponseCmdWriteMem] state 2 send nack byte...\n");
+//#endif
 					state = 10;
 				}
 			}
 		}break;
 		case CMD_WRITE_MEM_STATE_WRITE_TO_FLASH:
 		{
-			uint8_t data[STM32_MAX_FRAME + 2];
-			uint8_t rChecksum = 0;
+			static uint16_t otherLen = 0;
 
 			if(rBufferRxU2.len == STM32_MAX_FRAME + 2)
 			{
-				for(uint16_t i = 0; i < STM32_MAX_FRAME + 2; i++)
+				if(uartBootLoader_recieverNumOfBytes(checksum, rAddress, oldRaddress, realAddress) == true)
 				{
-					if(ringBufferRead(&rBufferRxU2, &rData) == RING_BUFFER_OK)
-					{
-						data[i] = rData;
-#if(USE_CONSOLE_DEBUG == 1)
-						printf("\n[uartBootLoaderResponseCmdWriteMem] reciever byte = 0x%x | len = %d\n", data[i], rBufferRxU2.len);
-#endif
-					}
-				}
-				/*data[0] : number of bytes
-				data[1 - 256] : 256 byte data
-				data[257] : checksum*/
-				checksum = uartBootLoaderChecksumCalculator(0, data + 1, 256);
-				checksum ^= data[0];
-
-				rChecksum = data[STM32_MAX_FRAME + 1];
-#if(USE_CONSOLE_DEBUG == 1)
-				printf("\n[uartBootLoaderResponseCmdWriteMem] checksum = %d | rChecksum = %d\n", checksum, rChecksum);
-#endif
-				if(checksum == rChecksum)
-				{
-					uint32_t addressOffset = rAddress - oldRaddress;
-					oldRaddress = rAddress;
-					realAddress += addressOffset;
-#if(USE_CONSOLE_DEBUG == 1)
-					printf("\n[uartBootLoaderResponseCmdWriteMem] addressOffset = 0x%x | realAddress = 0x%x\n", (int)addressOffset, (int)realAddress);
-#endif
-					/// write to flash
-					storageFlash_writeData(realAddress, data + 1, 256);
-
-					/// send ack
-					uartBootLoaderSendAck();
-#if(USE_CONSOLE_DEBUG == 1)
-					printf("\n[uartBootLoaderResponseCmdWriteMem] send Ack byte...\n");
-#endif
 					state = CMD_WRITE_MEM_STATE_DONE;
 				}
-				else
+
+				timeOutRec = HAL_GetTick();
+			}
+			else
+			{
+				if(HAL_GetTick() - timeOutRec > 100)
 				{
-					uartBootLoaderSendNack();
-#if(USE_CONSOLE_DEBUG == 1)
-					printf("\n[uartBootLoaderResponseCmdWriteMem] state 3 send nack byte...\n");
-#endif
+					timeOutRec = HAL_GetTick();
+
+					otherLen = rBufferRxU2.len;
+
+					printf("\n[uartBootLoaderResponseCmdWriteMem] time out reciever otherLen = %d\n", otherLen);
+
+					if(uartBootLoader_recieverNumOfBytes(checksum, rAddress, oldRaddress, realAddress) == true)
+					{
+						state = CMD_WRITE_MEM_STATE_DONE;
+					}
 				}
 			}
 		}break;
@@ -1021,6 +1069,7 @@ static bool uartBootLoaderResponseCmdWriteMem(void)
 			getStartAddress = false;
 			oldRaddress = 0;
 			realAddress = 0;
+			timeOutRec = 0;
 
 			return true;
 		}break;

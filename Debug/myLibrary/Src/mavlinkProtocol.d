@@ -1,6 +1,6 @@
 myLibrary/Src/mavlinkProtocol.o: ../myLibrary/Src/mavlinkProtocol.c \
- E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/mavlinkProtocol.h \
- E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/serialPort.h \
+ D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/mavlinkProtocol.h \
+ D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/serialPort.h \
  ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -27,39 +27,39 @@ myLibrary/Src/mavlinkProtocol.o: ../myLibrary/Src/mavlinkProtocol.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_avoid_errors.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\version.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_types.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\ardupilotmega.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\protocol.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_configure.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_control.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_status.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_gimbal_report.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_gimbal_control.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\common.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_heartbeat.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_sys_status.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_command_long.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_command_ack.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_list.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_entry.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_data.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_data.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_erase.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_end.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_mount_orientation.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_diagnostic.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_get_info.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_helpers.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\checksum.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_conversions.h \
- e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_sha256.h
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_avoid_errors.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\version.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_types.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\ardupilotmega.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\protocol.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_configure.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_control.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_status.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_gimbal_report.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_gimbal_control.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\common.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_heartbeat.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_sys_status.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_command_long.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_command_ack.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_list.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_entry.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_data.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_data.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_erase.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_end.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_mount_orientation.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_diagnostic.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_get_info.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_helpers.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\checksum.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_conversions.h \
+ d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_sha256.h
 
-E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/mavlinkProtocol.h:
+D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/mavlinkProtocol.h:
 
-E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/serialPort.h:
+D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/serialPort.h:
 
 ../Core/Inc/main.h:
 
@@ -115,60 +115,60 @@ E:/2022-work/firmware/home/stm32/stm32SwBootLoader/myLibrary/Inc/serialPort.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_avoid_errors.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_avoid_errors.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\version.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\version.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_types.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_types.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\ardupilotmega.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\ardupilotmega.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\protocol.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\protocol.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_configure.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_configure.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_control.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_control.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_status.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_mount_status.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_gimbal_report.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_gimbal_report.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_gimbal_control.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\ardupilotmega\mavlink_msg_gimbal_control.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\common.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\common.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_heartbeat.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_heartbeat.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_sys_status.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_sys_status.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_command_long.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_command_long.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_command_ack.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_command_ack.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_list.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_list.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_entry.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_entry.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_data.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_data.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_data.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_data.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_erase.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_erase.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_end.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_log_request_end.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_mount_orientation.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_mount_orientation.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\common\mavlink_msg_diagnostic.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\common\mavlink_msg_diagnostic.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_get_info.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_get_info.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_helpers.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_helpers.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\checksum.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\checksum.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_conversions.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_conversions.h:
 
-e:\2022-work\firmware\home\stm32\stm32swbootloader\mavlink_v2\mavlink_sha256.h:
+d:\gremsy\firmware\firmwarecurrent\stm32swbootloader\mavlink_v2\mavlink_sha256.h:

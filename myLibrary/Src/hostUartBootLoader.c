@@ -663,7 +663,7 @@ static bool hostBootLoader_writeMemCmd(uint32_t address, uint8_t *data, uint16_t
 static bool hostBootLoader_waittingResponeCmdWriteMem(void)
 {
     uint32_t flashAddress = 0x08020000;
-    uint32_t maxDataLength = 0xe98;//0x2b6b8;
+    uint32_t maxDataLength = 0x2b6b8;
     uint32_t start = 0x08020000;
     uint32_t end = start + maxDataLength;
     uint32_t left;
