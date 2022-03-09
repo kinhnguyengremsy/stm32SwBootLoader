@@ -25,6 +25,7 @@
 "./myLibrary/Src/mavlinkControl.o"
 "./myLibrary/Src/mavlinkMsgHandle.o"
 "./myLibrary/Src/mavlinkProtocol.o"
+"./myLibrary/Src/myMath.o"
 "./myLibrary/Src/ringBuffer.o"
 "./myLibrary/Src/serialPort.o"
 "./myLibrary/Src/sotfEmulations.o"

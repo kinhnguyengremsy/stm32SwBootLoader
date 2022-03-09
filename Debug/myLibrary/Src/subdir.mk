@@ -9,6 +9,7 @@ C_SRCS += \
 ../myLibrary/Src/mavlinkControl.c \
 ../myLibrary/Src/mavlinkMsgHandle.c \
 ../myLibrary/Src/mavlinkProtocol.c \
+../myLibrary/Src/myMath.c \
 ../myLibrary/Src/ringBuffer.c \
 ../myLibrary/Src/serialPort.c \
 ../myLibrary/Src/sotfEmulations.c \
@@ -23,6 +24,7 @@ OBJS += \
 ./myLibrary/Src/mavlinkControl.o \
 ./myLibrary/Src/mavlinkMsgHandle.o \
 ./myLibrary/Src/mavlinkProtocol.o \
+./myLibrary/Src/myMath.o \
 ./myLibrary/Src/ringBuffer.o \
 ./myLibrary/Src/serialPort.o \
 ./myLibrary/Src/sotfEmulations.o \
@@ -37,6 +39,7 @@ C_DEPS += \
 ./myLibrary/Src/mavlinkControl.d \
 ./myLibrary/Src/mavlinkMsgHandle.d \
 ./myLibrary/Src/mavlinkProtocol.d \
+./myLibrary/Src/myMath.d \
 ./myLibrary/Src/ringBuffer.d \
 ./myLibrary/Src/serialPort.d \
 ./myLibrary/Src/sotfEmulations.d \
@@ -54,7 +57,7 @@ myLibrary/Src/%.o: ../myLibrary/Src/%.c myLibrary/Src/subdir.mk
 clean: clean-myLibrary-2f-Src
 
 clean-myLibrary-2f-Src:
-	-$(RM) ./myLibrary/Src/hostUartBootLoader.d ./myLibrary/Src/hostUartBootLoader.o ./myLibrary/Src/mavlinkControl.d ./myLibrary/Src/mavlinkControl.o ./myLibrary/Src/mavlinkMsgHandle.d ./myLibrary/Src/mavlinkMsgHandle.o ./myLibrary/Src/mavlinkProtocol.d ./myLibrary/Src/mavlinkProtocol.o ./myLibrary/Src/ringBuffer.d ./myLibrary/Src/ringBuffer.o ./myLibrary/Src/serialPort.d ./myLibrary/Src/serialPort.o ./myLibrary/Src/sotfEmulations.d ./myLibrary/Src/sotfEmulations.o ./myLibrary/Src/storageFlash.d ./myLibrary/Src/storageFlash.o ./myLibrary/Src/swBootLoader.d ./myLibrary/Src/swBootLoader.o ./myLibrary/Src/uartBootLoader.d ./myLibrary/Src/uartBootLoader.o ./myLibrary/Src/uartCLI.d ./myLibrary/Src/uartCLI.o ./myLibrary/Src/uartCallback.d ./myLibrary/Src/uartCallback.o
+	-$(RM) ./myLibrary/Src/hostUartBootLoader.d ./myLibrary/Src/hostUartBootLoader.o ./myLibrary/Src/mavlinkControl.d ./myLibrary/Src/mavlinkControl.o ./myLibrary/Src/mavlinkMsgHandle.d ./myLibrary/Src/mavlinkMsgHandle.o ./myLibrary/Src/mavlinkProtocol.d ./myLibrary/Src/mavlinkProtocol.o ./myLibrary/Src/myMath.d ./myLibrary/Src/myMath.o ./myLibrary/Src/ringBuffer.d ./myLibrary/Src/ringBuffer.o ./myLibrary/Src/serialPort.d ./myLibrary/Src/serialPort.o ./myLibrary/Src/sotfEmulations.d ./myLibrary/Src/sotfEmulations.o ./myLibrary/Src/storageFlash.d ./myLibrary/Src/storageFlash.o ./myLibrary/Src/swBootLoader.d ./myLibrary/Src/swBootLoader.o ./myLibrary/Src/uartBootLoader.d ./myLibrary/Src/uartBootLoader.o ./myLibrary/Src/uartCLI.d ./myLibrary/Src/uartCLI.o ./myLibrary/Src/uartCallback.d ./myLibrary/Src/uartCallback.o
 
 .PHONY: clean-myLibrary-2f-Src
 

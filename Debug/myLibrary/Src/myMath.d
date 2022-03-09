@@ -1,5 +1,5 @@
-myLibrary/Src/uartCallback.o: ../myLibrary/Src/uartCallback.c \
- D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/uartCallback.h \
+myLibrary/Src/myMath.o: ../myLibrary/Src/myMath.c \
+ D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/myMath.h \
  ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -25,11 +25,9 @@ myLibrary/Src/uartCallback.o: ../myLibrary/Src/uartCallback.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/serialPort.h \
- D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/ringBuffer.h
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 
-D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/uartCallback.h:
+D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/myMath.h:
 
 ../Core/Inc/main.h:
 
@@ -84,7 +82,3 @@ D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/uartCallback.
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-
-D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/serialPort.h:
-
-D:/Gremsy/firmware/FirmwareCurrent/stm32SwBootLoader/myLibrary/Inc/ringBuffer.h:
