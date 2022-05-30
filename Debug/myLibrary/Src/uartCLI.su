@@ -1,6 +1,6 @@
-uartCLI.c:65:6:uartCLI_configuration	16	static
-uartCLI.c:78:12:__cmdCli	4	static
-uartCLI.c:95:19:uartCLI_getCmd	40	dynamic
-uartCLI.c:157:13:cmdCLI_getValueSet	40	static
-uartCLI.c:210:13:uartCLI_cmdHelp	16	static
-uartCLI.c:235:6:uartCLI_process	24	static
+../myLibrary/Src/uartCLI.c:65:6:uartCLI_configuration	16	static
+../myLibrary/Src/uartCLI.c:78:12:__cmdCli	4	static
+../myLibrary/Src/uartCLI.c:95:19:uartCLI_getCmd	48	dynamic
+../myLibrary/Src/uartCLI.c:157:13:cmdCLI_getValueSet	40	static
+../myLibrary/Src/uartCLI.c:210:13:uartCLI_cmdHelp	16	static
+../myLibrary/Src/uartCLI.c:235:6:uartCLI_process	24	static

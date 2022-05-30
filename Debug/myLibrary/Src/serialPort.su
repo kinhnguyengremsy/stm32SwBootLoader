@@ -1,6 +1,6 @@
-serialPort.c:45:10:serialPort_read_byte_count	24	static
-serialPort.c:63:6:serialPort_read	24	static
-serialPort.c:112:6:serialPort_send	16	static
-serialPort.c:130:6:serialPort_write	32	static
-serialPort.c:166:6:serialPort_write_list	36	static
-serialPort.c:183:6:serialPort_tx_finish	24	static
+../myLibrary/Src/serialPort.c:45:10:serialPort_read_byte_count	24	static
+../myLibrary/Src/serialPort.c:63:6:serialPort_read	24	static
+../myLibrary/Src/serialPort.c:112:6:serialPort_send	16	static
+../myLibrary/Src/serialPort.c:130:6:serialPort_write	32	static
+../myLibrary/Src/serialPort.c:166:6:serialPort_write_list	36	static
+../myLibrary/Src/serialPort.c:183:6:serialPort_tx_finish	24	static

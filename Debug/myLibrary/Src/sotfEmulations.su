@@ -1,6 +1,6 @@
-sotfEmulations.c:53:6:sotfEmulations_configuration	8	static
-sotfEmulations.c:70:13:sotfEmulations_readFlash	24	static
-sotfEmulations.c:96:23:sotfEmulations_sendStartCommand	24	static
-sotfEmulations.c:123:23:sotfEmulations_sendFlashData	56	static
-sotfEmulations.c:207:23:sotfEmulations_sendEndCommand	24	static
-sotfEmulations.c:233:6:softEmulations_process	24	static
+../myLibrary/Src/sotfEmulations.c:53:6:sotfEmulations_configuration	8	static
+../myLibrary/Src/sotfEmulations.c:70:13:sotfEmulations_readFlash	24	static
+../myLibrary/Src/sotfEmulations.c:96:23:sotfEmulations_sendStartCommand	24	static
+../myLibrary/Src/sotfEmulations.c:123:23:sotfEmulations_sendFlashData	56	static
+../myLibrary/Src/sotfEmulations.c:207:23:sotfEmulations_sendEndCommand	24	static
+../myLibrary/Src/sotfEmulations.c:233:6:softEmulations_process	24	static

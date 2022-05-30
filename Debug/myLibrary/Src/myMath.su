@@ -1,2 +1,2 @@
-myMath.c:51:6:integerToString	32	static
-myMath.c:83:6:stringToInteger	32	static
+../myLibrary/Src/myMath.c:51:6:integerToString	32	static
+../myLibrary/Src/myMath.c:83:6:stringToInteger	32	static
